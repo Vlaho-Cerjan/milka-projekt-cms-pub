@@ -1,0 +1,215 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64"]
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model admins {
+  id          Int     @id @default(autoincrement())
+  email       String  @db.VarChar(255)
+  first_name  String? @db.VarChar(255)
+  last_name   String? @db.VarChar(255)
+  password    String  @db.Text
+  title       String? @db.VarChar(255)
+  admin_title String? @db.VarChar(255)
+  admin_type  String? @db.VarChar(255)
+  create_at   String? @db.VarChar(255)
+  update_at   String? @db.VarChar(255)
+  delete_at   String? @db.VarChar(255)
+  img_src     String? @db.MediumText
+  alt         String? @db.MediumText
+  active      Int     @default(1) @db.TinyInt
+}
+
+model blog {
+  id                Int     @id @default(autoincrement())
+  title             String  @db.VarChar(255)
+  content           String  @db.MediumText
+  img_src           String? @db.MediumText
+  categories        Int?
+  tags              Int?
+  slug              String? @db.VarChar(255)
+  create_at         String? @db.VarChar(255)
+  update_at         String? @db.VarChar(255)
+  delete_at         String? @db.VarChar(255)
+  alt               String? @db.MediumText
+  short_description String? @db.MediumText
+}
+
+model categories {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  description String? @db.MediumText
+  create_at   String? @db.VarChar(255)
+  update_at   String? @db.VarChar(255)
+  delete_at   String? @db.VarChar(255)
+}
+
+model company_info {
+  id            Int     @id @default(autoincrement())
+  name          String  @db.VarChar(255)
+  title         String? @db.VarChar(255)
+  email         String? @db.VarChar(255)
+  url           String? @db.MediumText
+  working_hours String  @db.VarChar(255)
+  address       String? @db.MediumText
+  address_short String  @db.VarChar(255)
+  address_url   String? @db.MediumText
+  phone         String? @db.VarChar(255)
+  coords        String  @db.Text
+}
+
+model doctors {
+  id              Int     @id @default(autoincrement())
+  first_name      String  @db.VarChar(255)
+  aditional_names String? @db.VarChar(255)
+  last_name       String? @db.VarChar(255)
+  title           String? @db.VarChar(255)
+  bio             String? @db.MediumText
+  email           String? @db.VarChar(255)
+  phone           String? @db.VarChar(255)
+  create_at       String? @db.VarChar(255)
+  update_at       String? @db.VarChar(255)
+  delete_at       String? @db.VarChar(255)
+  img_src         String? @db.MediumText
+  slug            String? @db.VarChar(255)
+  alt             String? @db.MediumText
+  active          Int     @default(1) @db.TinyInt
+}
+
+model employes {
+  id              Int     @id @default(autoincrement())
+  first_name      String  @db.VarChar(255)
+  aditional_names String? @db.VarChar(255)
+  last_name       String? @db.VarChar(255)
+  title           String? @db.VarChar(255)
+  bio             String? @db.MediumText
+  email           String? @db.VarChar(255)
+  phone           String? @db.VarChar(255)
+  employe_title   String? @db.VarChar(255)
+  create_at       String? @db.VarChar(255)
+  update_at       String? @db.VarChar(255)
+  delete_at       String? @db.VarChar(255)
+  img_src         String? @db.MediumText
+  slug            String? @db.VarChar(255)
+  alt             String? @db.MediumText
+}
+
+model faq {
+  id        Int     @id @default(autoincrement())
+  title     String  @db.MediumText
+  content   String  @db.MediumText
+  faq_order Int
+  create_at String? @db.VarChar(255)
+  update_at String? @db.VarChar(255)
+  delete_at String? @db.VarChar(255)
+}
+
+model services {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  description String? @db.MediumText
+  doctors_id  String? @db.VarChar(255)
+  create_at   String? @db.VarChar(255)
+  update_at   String? @db.VarChar(255)
+  delete_at   String? @db.VarChar(255)
+  img_src     String? @db.MediumText
+  slug        String? @db.VarChar(255)
+  alt         String? @db.MediumText
+  active      Int     @default(1) @db.TinyInt
+  item_order  Int
+}
+
+model services_list {
+  id             Int     @id @default(autoincrement())
+  name           String  @db.VarChar(255)
+  usluga_id      Int?
+  pod_usluga_id  Int?
+  description    String? @db.MediumText
+  services_order Int?
+  highlighted    Int     @default(0) @db.TinyInt
+  active         Int     @default(1) @db.TinyInt
+  create_at      String? @db.VarChar(255)
+  update_at      String? @db.VarChar(255)
+  delete_at      String? @db.VarChar(255)
+}
+
+model subservices {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  usluga_id   Int
+  description String? @db.MediumText
+  doctors_id  String? @db.VarChar(255)
+  create_at   String? @db.VarChar(255)
+  update_at   String? @db.VarChar(255)
+  delete_at   String? @db.VarChar(255)
+  img_src     String? @db.MediumText
+  slug        String? @db.VarChar(255)
+  alt         String? @db.MediumText
+  active      Int     @default(1) @db.TinyInt
+  item_order  Int
+}
+
+model tags {
+  id        Int     @id
+  NAME      String  @db.VarChar(255)
+  create_at String? @db.VarChar(255)
+  update_at String? @db.VarChar(255)
+  delete_at String? @db.VarChar(255)
+}
+
+model page_info {
+  id               Int     @id @default(autoincrement())
+  title            String? @db.VarChar(255)
+  page_title       String  @db.Text
+  page_description String  @db.Text
+  page_slug        String  @db.Text
+  image            String  @db.Text
+  openGraphType    String  @db.Text
+  create_at        String  @db.VarChar(255)
+  update_at        String? @db.VarChar(255)
+  delete_at        String? @db.VarChar(255)
+}
+
+model socials {
+  id        Int     @id @default(autoincrement())
+  name      String  @db.VarChar(255)
+  href      String  @db.Text
+  type      String  @db.Text
+  active    Int     @default(1) @db.TinyInt
+  create_at String  @db.VarChar(255)
+  update_at String? @db.VarChar(255)
+  delete_at String? @db.VarChar(255)
+}
+
+model navigation {
+  id        Int     @id @default(autoincrement())
+  name      String  @db.VarChar(255)
+  href      String  @db.VarChar(255)
+  type      String  @db.VarChar(255)
+  parent_id Int?
+  nav_order Int
+  create_at String? @db.VarChar(255)
+  update_at String? @db.VarChar(255)
+  delete_at String? @db.VarChar(255)
+  active    Int     @default(1) @db.TinyInt
+}
+
+model services_price_list {
+  id              Int     @id @default(autoincrement())
+  service_list_id Int
+  title           String? @db.VarChar(255)
+  description     String? @db.Text
+  value           Float
+  discount        Float?
+  item_order      Int
+  create_at       String  @db.VarChar(255)
+  update_at       String? @db.VarChar(255)
+  delete_at       String? @db.VarChar(255)
+  active          Int     @default(1) @db.TinyInt
+}

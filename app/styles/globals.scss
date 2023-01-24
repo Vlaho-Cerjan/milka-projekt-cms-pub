@@ -1,0 +1,76 @@
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none !important;
+  font-weight: 700 !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button{
+  font-family: "Oswald", sans-serif;
+  text-decoration: none !important;
+}
+
+.ol-attribution {
+  display: none;
+}
+
+.MuiFormLabel-root.MuiInputLabel-root.Mui-focused {
+  font-weight: 900 !important;
+}
+
+p.MuiTypography-root {
+  font-weight: 500;
+}
+
+:root {
+  --leaflet-tile-filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+body.dark {
+  .leaflet-tile {
+    filter: var(--leaflet-tile-filter, none);
+  }
+
+  .leaflet-container {
+      background: #303030;
+  }
+
+  .bar-of-progress{
+    color: #90caf9 !important;
+    background-color: #90caf9 !important;
+  }
+}
+
+.bar-of-progress{
+  color: #0f7553 !important;
+  background-color: #0f7553 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .leaflet-tile {
+      filter: var(--leaflet-tile-filter, none);
+  }
+
+  .leaflet-container {
+      background: #303030;
+  }
+}
+
+.MuiPaper-root {
+  border-radius: 8px;
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-width: 2px !important;
+}
