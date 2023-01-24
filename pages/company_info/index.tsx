@@ -8,6 +8,7 @@ import { StyledLabel } from '../../app/components/common/styledInputs/styledLabe
 import StyledInput from '../../app/components/common/styledInputs/styledInput';
 import { useSnackbar } from 'notistack';
 import { company_info } from '../../app/interfaces/company_info';
+import { InferGetStaticPropsType } from "next";
 
 export const getStaticProps = async ({ params }: { params: { pageId: string } }) => {
     const prisma = new PrismaClient();
@@ -26,7 +27,7 @@ export const getStaticProps = async ({ params }: { params: { pageId: string } })
 
 }
 
-const CompanyInfo = ({ companyInfo }: { companyInfo: company_info }) => {
+const CompanyInfo = ({ companyInfo }: InferGetStaticPropsType<typeof getStaticProps>) => {
     const { enqueueSnackbar } = useSnackbar();
     const [company_info, setCompany_info] = React.useState<company_info | null>(null);
     const [name, setName] = React.useState("");
@@ -128,7 +129,7 @@ const CompanyInfo = ({ companyInfo }: { companyInfo: company_info }) => {
                     }}
                 >
                     <Box>
-                        <Button sx={{ paddingLeft: "4px" }} color="inherit" variant="contained" href="/pages">
+                        <Button sx={{ paddingLeft: "4px" }} color="info" variant="contained" href="/pages">
                             <KeyboardArrowLeft sx={{ fontSize: "24px" }} /> Nazad
                         </Button>
                     </Box>

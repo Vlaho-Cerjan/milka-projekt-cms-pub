@@ -8,6 +8,7 @@ import Subservices from '../../app/components/servicePage/subservices';
 import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import { useSensors, useSensor, MouseSensor, TouchSensor, DndContext, closestCenter } from '@dnd-kit/core';
 import { ServiceSortableItem } from '../../app/components/servicePage/serviceSortableItem';
+import { InferGetStaticPropsType } from "next";
 
 export const getStaticProps = async () => {
     const prisma = new PrismaClient();
@@ -51,7 +52,7 @@ interface ServicesWithSubservices extends services {
     subservices: subservices[];
 }
 
-const Pages = ({ services }: { services: ServicesWithSubservices[] }) => {
+const Services = ({ services }: {services: ServicesWithSubservices[]}) => {
     const [servicesState, setServicesState] = React.useState<ServicesWithSubservices[] | null>(null);
     const [subservicesState, setSubservicesState] = React.useState<{
         [key: string]: subservices[];
@@ -262,4 +263,4 @@ const Pages = ({ services }: { services: ServicesWithSubservices[] }) => {
     )
 }
 
-export default Pages;
+export default Services;

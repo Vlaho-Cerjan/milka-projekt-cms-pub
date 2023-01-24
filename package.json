@@ -34,7 +34,6 @@
     "leaflet": "^1.8.0",
     "next": "^13.1.5",
     "next-auth": "^4.17.0",
-    "next-transpile-modules": "^10.0.0",
     "notistack": "^2.0.5",
     "plaiceholder": "^2.3.0",
     "react": "^18.2.0",
