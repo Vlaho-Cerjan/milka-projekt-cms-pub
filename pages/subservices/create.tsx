@@ -1,6 +1,6 @@
-import { PrismaClient, services, services_list } from '@prisma/client';
+import { PrismaClient, doctors, services_list } from '@prisma/client';
 import { StyledContainer } from '../../app/components/common/container/styledContainer';
-import { Box, Typography, Button, Paper, Divider, Grid, FormControl, MenuItem, Select, styled, SelectChangeEvent } from '@mui/material';
+import { Box, Typography, Button, Paper, Divider, Grid, FormControl, MenuItem, Select, styled, SelectChangeEvent, Checkbox } from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
 import { KeyboardArrowLeft } from '@mui/icons-material';
 import React from 'react';
@@ -9,47 +9,72 @@ import StyledInput from '../../app/components/common/styledInputs/styledInput';
 import { useSnackbar } from 'notistack';
 import { useRouter } from 'next/router';
 import { CustomThemeContext } from '../../app/store/customThemeContext';
+import { UploadFileContainer } from '../../app/components/common/styledInputs/styledUploadFormContainer/styledUploadFormContainer';
+import { UploadFileFormLabel } from '../../app/components/common/styledInputs/styledUploadFormLabel/styledUploadFormLabel';
+import StyledUpload from '../../app/components/common/styledInputs/styledUpload/styledUpload';
+import { InferGetStaticPropsType } from "next";
 
-export const getStaticProps = async ({ params }: { params: { navHref: string } }) => {
+export const getStaticProps = async () => {
     const prisma = new PrismaClient();
 
-    const services = await prisma.services.findMany();
+    const db_doctors = await prisma.doctors.findMany({
+        where: {
+            active: 1
+        }
+    });
+
+    // get services
+    const db_services = await prisma.services.findMany({
+        where: {
+            active: 1
+        }
+    });
 
     return {
         props: {
-            services
+            db_doctors,
+            db_services
         },
     };
 
 }
 
-const CreateNavPage = ({ services }: { services: services[] }) => {
+
+const CreateSubservice = ({ db_doctors, db_services }: InferGetStaticPropsType<typeof getStaticProps>) => {
     const router = useRouter();
     const { isDark, theme } = React.useContext(CustomThemeContext);
     const { enqueueSnackbar } = useSnackbar();
     const [name, setName] = React.useState("");
-    const [href, setHref] = React.useState("");
-    const [parent, setParent] = React.useState<number | null>(-1);
+    const [description, setDescription] = React.useState("");
+    const [doctors, setDoctors] = React.useState<number[]>([]);
     const [active, setActive] = React.useState(1);
+    const [image, setImage] = React.useState("");
+    const [slug, setSlug] = React.useState("");
+    const [alt, setAlt] = React.useState("");
+    const [serviceId, setServiceId] = React.useState<number | null>(null);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        fetch(process.env.NEXT_PUBLIC_API_URL + 'services', {
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'subservices', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 name: name,
-                href: href,
-                parent_id: parent,
+                description: description,
+                doctors_id: doctors,
+                usluga_id: serviceId,
+                img_src: image,
+                slug: slug,
+                alt: alt,
                 active: active,
             })
         })
             .then(res => {
                 if (res.status === 200) {
-                    enqueueSnackbar("Uspješno ste stvorili poduslugu", { variant: "success" });
+                    enqueueSnackbar("Uspješno ste stvorili uslugu", { variant: "success" });
                     router.back();
                 } else if (res.status === 400) {
                     enqueueSnackbar("Greška prilikom stvaranja", { variant: "error" });
@@ -62,20 +87,11 @@ const CreateNavPage = ({ services }: { services: services[] }) => {
             );
     }
 
-    const [parentSelectValue, setParentSelectValue] = React.useState(parent);
-
-    const handleChange = (e: SelectChangeEvent<number | null>) => {
-        if (typeof e.target.value === "number") {
-            setParent(e.target.value);
-            setParentSelectValue(e.target.value);
-        }
-    }
-
     return (
         <StyledContainer>
             <SEO page_info={
                 {
-                    page_slug: "/services/create",
+                    page_slug: "/subservices/create",
                     page_title: "Stranice | Stvori Novu Poduslugu",
                     page_description: "Stranice | Stvori Novu Poduslugu",
                     image: "",
@@ -83,7 +99,7 @@ const CreateNavPage = ({ services }: { services: services[] }) => {
                 }
             } />
             <Typography component="h1" variant="h4" sx={{ mb: "32px" }}>
-                Stvori Novu Uslugu
+                Stvori Novu Poduslugu
             </Typography>
             <Paper
                 component={"form"}
@@ -142,52 +158,30 @@ const CreateNavPage = ({ services }: { services: services[] }) => {
                             />
                         </Grid>
                         <Grid item xs={12} sm={6} md={4} lg={3}>
-                            {StyledLabel("Slug - unesite # za dropdown")}
+                            {StyledLabel("Opis")}
                             <StyledInput
-                                inputVal={href}
-                                inputPlaceholder={"Unesi slug (URL)"}
-                                inputChangeFunction={setHref}
+                                inputVal={description}
+                                multiline
+                                minRows={5}
+                                inputPlaceholder={"Unesi opis"}
+                                inputChangeFunction={setDescription}
                                 required
                             />
                         </Grid>
                         <Grid item xs={12} sm={6} md={4} lg={3}>
-                            {StyledLabel("Roditelj")}
-                            <FormControl fullWidth>
-                                <Select
-                                    id="demo-simple-select"
-                                    value={parentSelectValue}
-                                    onChange={handleChange}
-                                    sx={{
-                                        fontSize: "14px",
-
-                                        '& fieldset': {
-                                            borderRadius: "12px",
-                                            borderWidth: "2px",
-                                        },
-
-                                        '& .MuiSelect-select': {
-                                            fontSize: "1em",
-                                            fontWeight: 500,
-                                        },
-                                    }}
-                                >
-                                    <MenuItem value={-1}>Nema Roditelja</MenuItem>
-                                    {services.map(
-                                        (serTemp) => (
-                                            <MenuItem key={serTemp.id} value={serTemp.id}>
-                                                {serTemp.name}
-                                            </MenuItem>
-                                        )
-                                    )
-                                    }
-                                </Select>
-                            </FormControl>
+                            {StyledLabel("Slug")}
+                            <StyledInput
+                                inputVal={slug}
+                                inputPlaceholder={"Unesi slug (npr. 'ime-usluge')"}
+                                inputChangeFunction={setSlug}
+                                required
+                            />
                         </Grid>
                         <Grid item xs={12} sm={6} md={4} lg={3}>
                             {StyledLabel("Aktivan")}
                             <FormControl fullWidth>
                                 <Select
-                                    id="demo-simple-select"
+                                    id="active-select"
                                     value={active}
                                     onChange={(e) => setActive(e.target.value as number)}
                                     sx={{
@@ -209,6 +203,90 @@ const CreateNavPage = ({ services }: { services: services[] }) => {
                                 </Select>
                             </FormControl>
                         </Grid>
+                        <Grid item xs={12} sm={4} md={4} lg={4}>
+                            {StyledLabel("Roditeljska usluga")}
+                            <FormControl fullWidth>
+                                <Select
+                                    id="service-select"
+                                    placeholder='Odaberi uslugu'
+                                    aria-placeholder='Odaberi uslugu'
+                                    value={serviceId}
+                                    onChange={(e) => setServiceId(e.target.value as number)}
+                                    sx={{
+                                        fontSize: "14px",
+
+                                        '& fieldset': {
+                                            borderRadius: "12px",
+                                            borderWidth: "2px",
+                                        },
+
+                                        '& .MuiSelect-select': {
+                                            fontSize: "1em",
+                                            fontWeight: 500,
+                                        },
+                                    }}
+                                >
+                                    {db_services.map((service) => (
+                                        <MenuItem sx={{ display: "flex", alignItems: "center" }} key={service.id} value={service.id}>
+                                            <Typography sx={{ fontSize: "14px", fontWeight: 500 }}>
+                                                {service.name}
+                                            </Typography>
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={4} md={4} lg={4}>
+                            {StyledLabel("Doktori")}
+                            <FormControl fullWidth>
+                                <Select
+                                    multiple
+                                    id="doctors-select"
+                                    placeholder='Odaberi doktore'
+                                    aria-placeholder='Odaberi doktore'
+                                    value={doctors}
+                                    onChange={(e) => setDoctors(e.target.value as number[])}
+                                    sx={{
+                                        fontSize: "14px",
+
+                                        '& fieldset': {
+                                            borderRadius: "12px",
+                                            borderWidth: "2px",
+                                        },
+
+                                        '& .MuiSelect-select': {
+                                            fontSize: "1em",
+                                            fontWeight: 500,
+                                        },
+                                    }}
+                                >
+                                    {db_doctors.map((doctor) => (
+                                        <MenuItem sx={{ display: "flex", alignItems: "center" }} key={doctor.id} value={doctor.id}>
+                                            <Checkbox sx={{ padding: "0 4px 0 0" }} checked={doctors.indexOf(doctor.id) > -1} />
+                                            {doctor.first_name + " " + (doctor.aditional_names ? doctor.aditional_names + " " : "") + doctor.last_name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        <Grid item xs={12} sm={4} md={4} lg={4}>
+                            {StyledLabel("Opis slike (alt)")}
+                            <StyledInput
+                                inputVal={alt}
+                                multiline
+                                minRows={5}
+                                inputPlaceholder={"Unesi opis slike (alt)"}
+                                inputChangeFunction={setAlt}
+                                required
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={12} md={6} lg={6}>
+                            <UploadFileContainer>
+                                <UploadFileFormLabel>SLIKA (600x337.5)</UploadFileFormLabel>
+                                <StyledUpload aspectRatio={16 / 9} type="image" file={image} setFile={setImage} resizeSizes={{ width: 600, height: 337.5 }} />
+                            </UploadFileContainer>
+                        </Grid>
                     </Grid>
                 </Box>
             </Paper>
@@ -216,4 +294,4 @@ const CreateNavPage = ({ services }: { services: services[] }) => {
     )
 }
 
-export default CreateNavPage;
+export default CreateSubservice;

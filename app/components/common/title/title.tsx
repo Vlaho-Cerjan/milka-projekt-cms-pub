@@ -1,29 +1,16 @@
-import { Box, styled, Typography, SxProps } from '@mui/material';
+import { Typography } from '@mui/material';
 import React from 'react';
 
-const StyledTitleBox = styled(Box)`
-    padding: 40px;
-    font-size: 20px;
-    line-height: 20px;
-    text-align: center;
-`
+interface TitleProps {
+    title: string
+}
 
-export const Title = ({title, sx}: {title: string, sx?: SxProps}) => {
+const Title = ({title}: TitleProps) => {
     return (
-        <StyledTitleBox>
-            <Typography
-                component="h2"
-                sx={{
-                    fontSize: "1em",
-                    lineHeight: "inherit",
-                    color: "text.primary",
-                    fontWeight: "bold",
-                    minWidth: "240px",
-                    ...sx
-                }}
-            >
-                {title}
-            </Typography>
-        </StyledTitleBox>
+        <Typography sx={{ pb: "32px" }} color="primary.main" textAlign="center" variant="h3" component="h2" fontWeight={700}>
+            {title}
+        </Typography>
     )
 }
+
+export default Title;

@@ -644,6 +644,79 @@ app.get("/prisma/services", (req, res) => {
         );
 });
 
+// get services with subservices based on the service id
+app.get("/prisma/services_with_subservices", (req, res) => {
+    prisma.services.findMany({
+        where: {
+            active: 1
+        },
+        orderBy: {
+            item_order: "asc"
+        }
+    })
+        .then((data) => {
+            prisma.subservices.findMany({
+                where: {
+                    active: 1
+                },
+                orderBy: {
+                    item_order: "asc"
+                }
+            })
+                .then((subservices) => {
+                    const services = data.map((service) => {
+                        return {
+                            ...service,
+                            subservices: subservices.filter((subservice) => subservice.usluga_id === service.id)
+                        }
+                    });
+                    res.status(200).json(services);
+                })
+                .catch((error) => {
+                    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                        // The .code property can be accessed in a type-safe manner
+                        if (error.code === 'P2002') {
+                            res.status(400).json({
+                                success: false,
+                                error: "Duplicate entry"
+                            });
+
+                        }
+                    }
+                    res.status(400).json({
+                        success: false,
+                        error: error.toString()
+                    })
+                })
+                .finally(async () => {
+                    await prisma.$disconnect();
+                    return;
+                });
+        }
+        )
+        .catch((error) => {
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                // The .code property can be accessed in a type-safe manner
+                if (error.code === 'P2002') {
+                    res.status(400).json({
+                        success: false,
+                        error: "Duplicate entry"
+                    });
+
+                }
+            }
+            res.status(400).json({
+                success: false,
+                error: error.toString()
+            })
+        }
+        )
+        .finally(async () => {
+            await prisma.$disconnect();
+        }
+        );
+});
+
 app.post("/prisma/services", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
         const imageName =  await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
@@ -872,8 +945,10 @@ app.post("/prisma/subservices", async (req, res) => {
             ...tempData,
             description: req.body.description,
             alt: req.body.alt,
-            services_id: req.body.services_id,
-            create_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            usluga_id: req.body.usluga_id,
+            doctors_id: req.body.doctors_id.toString(),
+            create_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            item_order: getOrder
         },
     })
         .then((data) => {

@@ -23,7 +23,7 @@ const Subservices = ({
 
     return (
         <Box>
-            {services && services.map((serviceItem) => (
+            {typeof services !== "undefined" && services && services.length > 0 && services.map((serviceItem) => (
                 serviceItem.subservices && serviceItem.subservices.length > 0 ?
                     <Box key={serviceItem.id}>
                         <Divider sx={{ my: "32px", borderBottomWidth: "2px" }} />

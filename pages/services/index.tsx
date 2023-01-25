@@ -14,7 +14,7 @@ export const getStaticProps = async () => {
     const prisma = new PrismaClient();
 
     // get services and subservices and store subservices in services
-    let services = await prisma.services.findMany({
+    let services: any = await prisma.services.findMany({
         where: {
             active: 1,
         },
@@ -32,7 +32,7 @@ export const getStaticProps = async () => {
         }
     });
 
-    const servicesWithSubservices = services.map((service) => {
+    const servicesWithSubservices = services.map((service: services) => {
         return {
             ...service,
             subservices: subservices.filter((subservice) => subservice.usluga_id === service.id),
@@ -52,7 +52,7 @@ interface ServicesWithSubservices extends services {
     subservices: subservices[];
 }
 
-const Services = ({ services }: {services: ServicesWithSubservices[]}) => {
+const Services = ({ services }: { services: ServicesWithSubservices[] }) => {
     const [servicesState, setServicesState] = React.useState<ServicesWithSubservices[] | null>(null);
     const [subservicesState, setSubservicesState] = React.useState<{
         [key: string]: subservices[];
@@ -66,7 +66,24 @@ const Services = ({ services }: {services: ServicesWithSubservices[]}) => {
             .then((res) => res.json())
             .then(() => {
                 enqueueSnackbar('Uspješno ste izbrisali stranicu!', { variant: 'success' });
-                fetch(process.env.NEXT_PUBLIC_API_URL + 'services')
+                fetch(process.env.NEXT_PUBLIC_API_URL + 'services_with_subservices')
+                    .then((res) => res.json())
+                    .then((data) => {
+                        console.log(data);
+                        setServicesState(data);
+                    }
+                    );
+            })
+    }
+
+    const handleDeleteSubservice = (serviceId: string) => {
+        fetch(process.env.NEXT_PUBLIC_API_URL + `subservices/` + serviceId, {
+            method: 'DELETE'
+        })
+            .then((res) => res.json())
+            .then(() => {
+                enqueueSnackbar('Uspješno ste izbrisali podstranicu!', { variant: 'success' });
+                fetch(process.env.NEXT_PUBLIC_API_URL + 'services_with_subservices')
                     .then((res) => res.json())
                     .then((data) => {
                         setServicesState(data);
@@ -230,7 +247,7 @@ const Services = ({ services }: {services: ServicesWithSubservices[]}) => {
                     >
                         <SortableContext
                             items={
-                                servicesState ?
+                                typeof servicesState !== "undefined" && servicesState && servicesState.length > 0 ?
                                     servicesState
                                     :
                                     []
@@ -238,7 +255,7 @@ const Services = ({ services }: {services: ServicesWithSubservices[]}) => {
                             strategy={rectSortingStrategy}
                         >
                             <Grid container spacing={2}>
-                                {servicesState ? servicesState.map((service) => (
+                                {typeof servicesState !== "undefined" && servicesState && servicesState.length > 0 ? servicesState.map((service) => (
                                     <ServiceSortableItem
                                         key={service.id}
                                         service={service}
@@ -255,7 +272,7 @@ const Services = ({ services }: {services: ServicesWithSubservices[]}) => {
                     <Subservices
                         services={servicesState}
                         handleDragChildEnd={handleDragChildEnd}
-                        handleDelete={handleDelete}
+                        handleDelete={handleDeleteSubservice}
                     />
                 </Box>
             </Box>
