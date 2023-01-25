@@ -13,7 +13,9 @@ export const LanguageContext = createContext<{
   setLocale: () => {}
 });
 
-export const LanguageProvider: React.FC = ({ children }) => {
+export const LanguageProvider = (
+  { children }: { children: React.ReactNode }
+) => {
   const [locale, setLocale] = useState('en');
 
   useEffect(() => {

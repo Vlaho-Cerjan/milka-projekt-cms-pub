@@ -1,10 +1,10 @@
 import { Box, Button, Card, CardActions, CardContent, Container, Grid, styled, Typography } from '@mui/material';
 import React, {useContext} from 'react';
-import Title from '../common/title/title';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CustomThemeContext } from '../../store/customThemeContext';
 import { StyledContainer } from '../common/container/styledContainer';
+import { Title } from '../common/title/title';
 
 interface OurTeamProps {
     employes: {

@@ -2,8 +2,8 @@ import { Container, Typography, Grid, Card, CardActions, styled, CardContent, Bu
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import Title from '../common/title/title';
 import { StyledContainer } from '../common/container/styledContainer';
+import { Title } from '../common/title/title';
 
 const StyledCard = styled(Card)(() => ({
     height: "100%",
@@ -54,9 +54,7 @@ const OurServices = ({services}: ServicesProps) => {
                                 width={1920}
                                 height={1080}
                                 quality={90}
-                                layout="responsive"
                                 className="resImg"
-                                objectFit="cover"
                                 sizes="(max-width: 600px) 500px,
                                 (max-width: 750px) 250px,
                                 (max-width: 900px) 400px,

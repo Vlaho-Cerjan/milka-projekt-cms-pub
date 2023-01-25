@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, company_info } from '@prisma/client';
 import { StyledContainer } from '../../app/components/common/container/styledContainer';
 import { Box, Typography, Button, Paper, Divider, Grid } from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
@@ -7,7 +7,6 @@ import React from 'react';
 import { StyledLabel } from '../../app/components/common/styledInputs/styledLabel/styledLabel';
 import StyledInput from '../../app/components/common/styledInputs/styledInput';
 import { useSnackbar } from 'notistack';
-import { company_info } from '../../app/interfaces/company_info';
 import { InferGetStaticPropsType } from "next";
 
 export const getStaticProps = async ({ params }: { params: { pageId: string } }) => {
@@ -29,7 +28,7 @@ export const getStaticProps = async ({ params }: { params: { pageId: string } })
 
 const CompanyInfo = ({ companyInfo }: InferGetStaticPropsType<typeof getStaticProps>) => {
     const { enqueueSnackbar } = useSnackbar();
-    const [company_info, setCompany_info] = React.useState<company_info | null>(null);
+    const [company_info, setCompany_info] = React.useState<company_info | null>(null);
     const [name, setName] = React.useState("");
     const [title, setTitle] = React.useState("");
     const [email, setEmail] = React.useState("");
@@ -41,16 +40,18 @@ const CompanyInfo = ({ companyInfo }: InferGetStaticPropsType<typeof getStaticPr
     const [coords, setCoords] = React.useState("");
 
     React.useEffect(() => {
-        setCompany_info(companyInfo);
-        setName(companyInfo.name);
-        if(companyInfo.title) setTitle(companyInfo.title);
-        if(companyInfo.email) setEmail(companyInfo.email);
-        if(companyInfo.url) setUrl(companyInfo.url);
-        setWorking_hours(companyInfo.working_hours);
-        if(companyInfo.address) setAddress(companyInfo.address);
-        setAddress_short(companyInfo.address_short);
-        if(companyInfo.phone) setPhone(companyInfo.phone);
-        setCoords(companyInfo.coords);
+        if (companyInfo) {
+            setCompany_info(companyInfo);
+            setName(companyInfo.name);
+            if (companyInfo.title) setTitle(companyInfo.title);
+            if (companyInfo.email) setEmail(companyInfo.email);
+            if (companyInfo.url) setUrl(companyInfo.url);
+            setWorking_hours(companyInfo.working_hours);
+            if (companyInfo.address) setAddress(companyInfo.address);
+            setAddress_short(companyInfo.address_short);
+            if (companyInfo.phone) setPhone(companyInfo.phone);
+            setCoords(companyInfo.coords);
+        }
     }, [companyInfo]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -77,7 +78,7 @@ const CompanyInfo = ({ companyInfo }: InferGetStaticPropsType<typeof getStaticPr
             .then(res => {
                 if (res.status === 200) {
                     enqueueSnackbar("Uspješno ste ažurirali podatke", { variant: "success" });
-                    fetch(process.env.NEXT_PUBLIC_API_URL+'company_info', {
+                    fetch(process.env.NEXT_PUBLIC_API_URL + 'company_info', {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
@@ -143,92 +144,92 @@ const CompanyInfo = ({ companyInfo }: InferGetStaticPropsType<typeof getStaticPr
                 </Box>
                 <Divider sx={{ mb: "16px", borderBottomWidth: "2px" }} />
                 {company_info ?
-                <Box
-                    sx={{
-                        p: "16px",
-                    }}
-                >
-                    <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Ime")}
-                            <StyledInput
-                                inputVal={name}
-                                inputPlaceholder={"Unesi ime tvrtke"}
-                                inputChangeFunction={setName}
-                            />
+                    <Box
+                        sx={{
+                            p: "16px",
+                        }}
+                    >
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6} md={4}>
+                                {StyledLabel("Ime")}
+                                <StyledInput
+                                    inputVal={name}
+                                    inputPlaceholder={"Unesi ime tvrtke"}
+                                    inputChangeFunction={setName}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                {StyledLabel("Naslov")}
+                                <StyledInput
+                                    inputVal={title}
+                                    inputPlaceholder={"Unesi naslov"}
+                                    inputChangeFunction={setTitle}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                {StyledLabel("Email")}
+                                <StyledInput
+                                    inputVal={email}
+                                    inputPlaceholder={"Unesi email"}
+                                    inputChangeFunction={setEmail}
+                                    type="email"
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                {StyledLabel("URL")}
+                                <StyledInput
+                                    inputVal={url}
+                                    inputPlaceholder={"Unesi url"}
+                                    inputChangeFunction={setUrl}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                {StyledLabel("Radno vrijeme")}
+                                <StyledInput
+                                    inputVal={working_hours}
+                                    inputPlaceholder={"Unesi radno vrijeme"}
+                                    inputChangeFunction={setWorking_hours}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                {StyledLabel("Adresa")}
+                                <StyledInput
+                                    inputVal={address}
+                                    inputPlaceholder={"Unesi adresu"}
+                                    inputChangeFunction={setAddress}
+                                    multiline
+                                    rows={4}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                {StyledLabel("Adresa (kratko)")}
+                                <StyledInput
+                                    inputVal={address_short}
+                                    inputPlaceholder={"Unesi adresu (kratko)"}
+                                    inputChangeFunction={setAddress_short}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                {StyledLabel("Telefon")}
+                                <StyledInput
+                                    inputVal={phone}
+                                    inputPlaceholder={"Unesi telefon"}
+                                    inputChangeFunction={setPhone}
+                                    type="tel"
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                {StyledLabel("Koordinate")}
+                                <StyledInput
+                                    inputVal={coords}
+                                    inputPlaceholder={"Unesi koordinate"}
+                                    inputChangeFunction={setCoords}
+                                />
+                            </Grid>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Naslov")}
-                            <StyledInput
-                                inputVal={title}
-                                inputPlaceholder={"Unesi naslov"}
-                                inputChangeFunction={setTitle}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Email")}
-                            <StyledInput
-                                inputVal={email}
-                                inputPlaceholder={"Unesi email"}
-                                inputChangeFunction={setEmail}
-                                type="email"
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("URL")}
-                            <StyledInput
-                                inputVal={url}
-                                inputPlaceholder={"Unesi url"}
-                                inputChangeFunction={setUrl}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Radno vrijeme")}
-                            <StyledInput
-                                inputVal={working_hours}
-                                inputPlaceholder={"Unesi radno vrijeme"}
-                                inputChangeFunction={setWorking_hours}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Adresa")}
-                            <StyledInput
-                                inputVal={address}
-                                inputPlaceholder={"Unesi adresu"}
-                                inputChangeFunction={setAddress}
-                                multiline
-                                rows={4}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Adresa (kratko)")}
-                            <StyledInput
-                                inputVal={address_short}
-                                inputPlaceholder={"Unesi adresu (kratko)"}
-                                inputChangeFunction={setAddress_short}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Telefon")}
-                            <StyledInput
-                                inputVal={phone}
-                                inputPlaceholder={"Unesi telefon"}
-                                inputChangeFunction={setPhone}
-                                type="tel"
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Koordinate")}
-                            <StyledInput
-                                inputVal={coords}
-                                inputPlaceholder={"Unesi koordinate"}
-                                inputChangeFunction={setCoords}
-                            />
-                        </Grid>
-                    </Grid>
-                </Box>
-                :
-                null
+                    </Box>
+                    :
+                    null
                 }
             </Paper>
         </StyledContainer>

@@ -7,20 +7,20 @@ export const defaultMode = "light";
 export const modes = ["light", "dark"];
 export const ModeContext = createContext<{
   mode: string,
-  setMode: (mode: string) => void
+  setMode: (mode: string) => void
 }>({
   mode: "",
-  setMode: () => {}
+  setMode: () => { }
 });
 
-export const ModeProvider: React.FC = ({ children }) => {
+export const ModeProvider = ({ children }: { children: React.ReactNode }) => {
   const [mode, setMode] = useState('light');
 
   useEffect(() => {
     const m = localStorage.getItem('mode') || mode;
     setMode(m);
-    if (m==="dark" && !document.body.classList.contains("dark")) document.body.classList.add("dark");
-    else if (m==="light" && document.body.classList.contains("dark"))  document.body.classList.remove("dark");
+    if (m === "dark" && !document.body.classList.contains("dark")) document.body.classList.add("dark");
+    else if (m === "light" && document.body.classList.contains("dark")) document.body.classList.remove("dark");
   }, [mode]);
 
   const setThemeMode = (mode: string) => {

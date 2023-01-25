@@ -15,15 +15,12 @@ const ContactForm = ({ companyInfo }: { companyInfo: any }) => {
         <StyledContainer>
             <Grid container spacing={0}>
                 {width > theme.breakpoints.values.md ?
-                    <Grid item xs={12} md={4} maxWidth={640} sx={{ '& > span': { height: "100% !important" } }}>
+                    <Grid item xs={12} md={4} maxWidth={640} sx={{ '& > span': { height: "100% !important", width: "100%", maxWidth: "640px" } }}>
                         <Image
                             src={isDark ? "/images/home/skincare-dark.jpg" : "/images/home/skincare.jpg"}
                             alt="pink flowers and a generic hand cream on a white table"
-                            width={640}
-                            height={"100%"}
+                            fill
                             quality={100}
-                            layout="responsive"
-                            objectFit="cover"
                             sizes="100vw"
                         />
                     </Grid>
