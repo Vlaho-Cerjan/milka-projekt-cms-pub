@@ -22,6 +22,12 @@ export const getStaticProps = async ({ params }: { params: { navHref: string } }
         }
     });
 
+    if (!nav) {
+        return {
+            notFound: true,
+        };
+    }
+
     return {
         props: {
             nav,
@@ -34,7 +40,17 @@ export const getStaticProps = async ({ params }: { params: { navHref: string } }
 export const getStaticPaths = async () => {
     const prisma = new PrismaClient();
 
-    const navigation = await prisma.navigation.findMany();
+    // exclude routes that are # or / or /# or /#
+    const navigation = await prisma.navigation.findMany({
+        where: {
+            href: {
+                not: {
+                    in: ["#", "/", "/#", "/#"]
+                }
+            },
+            active: 1
+        }
+    });
 
     const getLastWord = (str: string) => {
         const last = str.trim().split("/").pop();

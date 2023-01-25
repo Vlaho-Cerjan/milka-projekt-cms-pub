@@ -13,15 +13,25 @@ import StyledUpload from '../../app/components/common/styledInputs/styledUpload/
 import { useSnackbar } from 'notistack';
 import { useRouter } from 'next/router';
 import { CustomThemeContext } from '../../app/store/customThemeContext';
+import { InferGetStaticPropsType } from "next";
 
 export const getStaticProps = async ({ params }: { params: { pageId: string } }) => {
     const prisma = new PrismaClient();
 
+    // get pages from database, replace "-" with "/" and replace "naslovna" with "/"
     const page = await prisma.page_info.findFirst({
         where: {
-            page_slug: params.pageId === "naslovna" ? "/" : "/" + params.pageId
+            page_slug: {
+                equals: (params.pageId === "naslovna" ? "/" : "/" + params.pageId.replace(/-/g, "/"))
+            },
         }
     });
+
+    if (!page) {
+        return {
+            notFound: true,
+        };
+    }
 
     return {
         props: {
@@ -36,22 +46,17 @@ export const getStaticPaths = async () => {
 
     const page_info = await prisma.page_info.findMany();
 
-    const getLastWord = (str: string) => {
-        const last = str.trim().split("/").pop();
-        if (last) {
-            return last;
-        }
-        return "";
-    }
-
+    // set paths for static pages from database,replace "/" with "naslovna", else remove first "/" from page_slug and replace other "/" with "-"
     const paths = page_info.map((page) => ({
-        params: { pageId: (page.page_slug === "/" ? "naslovna" : getLastWord(page.page_slug)) },
+        params: {
+            pageId: (page.page_slug === "/" ? "naslovna" : page.page_slug.replace("/", "").replace(/\//g, "-"))
+        },
     }));
 
     return { paths, fallback: false };
 }
 
-const Page = ({ page }: { page: page_info }) => {
+const Page = ({ page }: InferGetStaticPropsType<typeof getStaticProps>) => {
     const router = useRouter();
     const { isDark, theme } = React.useContext(CustomThemeContext);
     const { enqueueSnackbar } = useSnackbar();
