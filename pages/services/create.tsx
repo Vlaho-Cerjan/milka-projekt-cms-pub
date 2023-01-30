@@ -1,6 +1,17 @@
-import { PrismaClient, doctors, services_list, services_price_list } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { StyledContainer } from '../../app/components/common/container/styledContainer';
-import { Box, Typography, Button, Paper, Divider, Grid, FormControl, MenuItem, Select, styled, SelectChangeEvent, Checkbox } from '@mui/material';
+import {
+    Box,
+    Typography,
+    Button,
+    Paper,
+    Divider,
+    Grid,
+    FormControl,
+    MenuItem,
+    Select,
+    Checkbox,
+} from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
 import { KeyboardArrowLeft } from '@mui/icons-material';
 import React from 'react';
@@ -67,6 +78,7 @@ const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getSta
                 slug: slug,
                 alt: alt,
                 active: active,
+                prices: servicePrices
             })
         })
             .then(res => {

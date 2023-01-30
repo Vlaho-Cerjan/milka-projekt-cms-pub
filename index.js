@@ -762,6 +762,9 @@ app.post("/prisma/services", async (req, res) => {
         },
     })
         .then((data) => {
+            // if body has prices array then create prices for this service
+            // prices array is an array of objects with name, description, price, discount
+
             res.status(200).json({
                 success: true,
                 service: data,

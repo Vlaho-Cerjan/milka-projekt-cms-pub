@@ -182,19 +182,21 @@ const ServicesPrices = (
                 open ?
                     <Box
                         sx={{
-                            position: "absolute",
+                            position: "fixed",
                             top: "0",
                             left: "0",
                             width: "100%",
                             height: "100%",
+                            maxHeight: "100vh",
                             display: "flex",
                             justifyContent: "center",
                             alignItems: "center",
+                            zIndex: (theme) => theme.zIndex.drawer + 1,
                         }}
                     >
                         <Box
                             sx={{
-                                zIndex: (theme) => theme.zIndex.drawer + 2,
+                                zIndex: (theme) => theme.zIndex.drawer + 3,
                                 position: "relative",
                                 width: "100%",
                                 maxWidth: "400px",
@@ -318,7 +320,7 @@ const ServicesPrices = (
                         </Box>
                         <Backdrop
                             open={open}
-                            sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                            sx={{ zIndex: (theme) => theme.zIndex.drawer + 2, maxHeight: "100vh" }}
                             onClick={() => {
                                 setOpen(false);
                                 clearValues();
