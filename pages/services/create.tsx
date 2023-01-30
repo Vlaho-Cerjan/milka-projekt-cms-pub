@@ -1,4 +1,4 @@
-import { PrismaClient, doctors, services_list } from '@prisma/client';
+import { PrismaClient, doctors, services_list, services_price_list } from '@prisma/client';
 import { StyledContainer } from '../../app/components/common/container/styledContainer';
 import { Box, Typography, Button, Paper, Divider, Grid, FormControl, MenuItem, Select, styled, SelectChangeEvent, Checkbox } from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
@@ -12,6 +12,8 @@ import { CustomThemeContext } from '../../app/store/customThemeContext';
 import { UploadFileContainer } from '../../app/components/common/styledInputs/styledUploadFormContainer/styledUploadFormContainer';
 import { UploadFileFormLabel } from '../../app/components/common/styledInputs/styledUploadFormLabel/styledUploadFormLabel';
 import StyledUpload from '../../app/components/common/styledInputs/styledUpload/styledUpload';
+import { InferGetStaticPropsType } from "next";
+import ServicesPrices from '../../app/components/servicePage/servicesPrices';
 
 export const getStaticProps = async () => {
     const prisma = new PrismaClient();
@@ -31,7 +33,7 @@ export const getStaticProps = async () => {
 }
 
 
-const CreateServicePage = ({ db_doctors }: { db_doctors: doctors[] }) => {
+const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getStaticProps>) => {
     const router = useRouter();
     const { isDark, theme } = React.useContext(CustomThemeContext);
     const { enqueueSnackbar } = useSnackbar();
@@ -42,6 +44,12 @@ const CreateServicePage = ({ db_doctors }: { db_doctors: doctors[] }) => {
     const [image, setImage] = React.useState("");
     const [slug, setSlug] = React.useState("");
     const [alt, setAlt] = React.useState("");
+    const [servicePrices, setServicePrices] = React.useState<{
+        title: string;
+        description: string;
+        value: number;
+        discount: number;
+    }[]>([]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -161,7 +169,7 @@ const CreateServicePage = ({ db_doctors }: { db_doctors: doctors[] }) => {
                             {StyledLabel("Slug")}
                             <StyledInput
                                 inputVal={slug}
-                                inputPlaceholder={"Unesi slug (npr. 'ime-usluge')"}
+                                inputPlaceholder={"Unesi slug/href (npr. 'ime-usluge')"}
                                 inputChangeFunction={setSlug}
                                 required
                             />
@@ -192,7 +200,7 @@ const CreateServicePage = ({ db_doctors }: { db_doctors: doctors[] }) => {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={3} lg={3}>
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
                             {StyledLabel("Doktori")}
                             <FormControl fullWidth>
                                 <Select
@@ -226,7 +234,7 @@ const CreateServicePage = ({ db_doctors }: { db_doctors: doctors[] }) => {
                             </FormControl>
                         </Grid>
 
-                        <Grid item xs={12} sm={6} md={3} lg={3}>
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
                             {StyledLabel("Opis slike (alt)")}
                             <StyledInput
                                 inputVal={alt}
@@ -245,6 +253,15 @@ const CreateServicePage = ({ db_doctors }: { db_doctors: doctors[] }) => {
                         </Grid>
                     </Grid>
                 </Box>
+            </Paper>
+            <Divider sx={{ my: "16px", borderBottomWidth: "2px" }} />
+            <Paper
+                elevation={3}
+            >
+                <ServicesPrices
+                    servicePrices={servicePrices}
+                    setServicePrices={setServicePrices}
+                />
             </Paper>
         </StyledContainer>
     )

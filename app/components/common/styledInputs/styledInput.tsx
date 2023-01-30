@@ -27,7 +27,7 @@ interface InputComponentProps {
     inputIcon?: ReactElement<any, any>,
     inputIconFunction?: (value: string) => void,
     required?: boolean,
-    inputVal?: string | null,
+    inputVal?: string | number | null,
     clearInput?: boolean,
     disabled?: boolean,
     error?: boolean,
