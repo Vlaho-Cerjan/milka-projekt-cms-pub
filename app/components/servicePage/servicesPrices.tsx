@@ -8,28 +8,32 @@ import { StyledLabel } from '../common/styledInputs/styledLabel/styledLabel';
 import StyledInput from '../common/styledInputs/styledInput';
 import { borderRadius } from '@mui/system';
 import { styled } from '@mui/material/styles';
+import StyledButtonIconOnly from '../common/styledInputs/styledButtons/styledButtonIconOnly';
+import { Delete } from '@mui/icons-material';
 
 const StyledGridItem = styled(Grid)(({ theme }) => ({
     padding: "2px 8px",
 }));
 
 interface ServicesPricesProps {
+    index: number;
     servicePrices: {
         title: string;
         description: string;
         value: number;
         discount: number;
-    }[];
+    }[][];
     setServicePrices: React.Dispatch<React.SetStateAction<{
         title: string;
         description: string;
         value: number;
         discount: number;
-    }[]>>;
+    }[][]>>;
 }
 
 const ServicesPrices = (
     {
+        index,
         servicePrices,
         setServicePrices
     }: ServicesPricesProps
@@ -54,15 +58,19 @@ const ServicesPrices = (
     }
 
     const createPrice = () => {
-        setServicePrices([
-            ...servicePrices,
-            {
+        setServicePrices((prevState) => {
+            const newState = [...prevState];
+            if (typeof newState[index] === "undefined") {
+                newState[index] = [];
+            }
+            newState[index].push({
                 title,
                 description,
                 value,
                 discount
-            }
-        ]);
+            });
+            return newState;
+        });
         setOpen(false);
         clearValues();
     }
@@ -94,7 +102,7 @@ const ServicesPrices = (
                                     }}
                                     container
                                 >
-                                    <Grid item xs={12} sm={6} md={6} lg={4}>
+                                    <Grid item xs={12} sm={6} md={6} lg={3}>
                                         <TextBold14
                                             text={"Naziv"}
                                         />
@@ -114,46 +122,72 @@ const ServicesPrices = (
                                             text={"Popust"}
                                         />
                                     </Grid>
+                                    <Grid item xs={12} sm={6} md={6} lg={1}>
+                                        <TextBold14
+                                            text={"Akcija"}
+                                        />
+                                    </Grid>
                                 </Grid>
                                 <Divider sx={{ my: "16px", borderBottomWidth: "2px" }} />
-                                {servicePrices.map((price, index) => (
-                                    <Box>
-                                    <Grid
-                                        key={index}
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            textAlign: "center",
-                                        }}
-                                        container
-                                    >
-                                        <StyledGridItem item xs={12} sm={6} md={6} lg={4}>
-                                            <TextMedium14
-                                                text={price.title}
-                                            />
-                                        </StyledGridItem>
-                                        <StyledGridItem item xs={12} sm={6} md={6} lg={4}>
-                                            <TextMedium14
-                                                text={price.description}
-                                            />
-                                        </StyledGridItem>
-                                        <StyledGridItem item xs={12} sm={6} md={6} lg={2}>
-                                            {
-                                            // price in eur
-                                            <TextMedium14
-                                                text={price.value + " €"}
-                                            />
-                                            }
-                                        </StyledGridItem>
-                                        <StyledGridItem item xs={12} sm={6} md={6} lg={2}>
-                                            <TextMedium14
-                                                text={(price.discount) ? price.discount + " %" : "0 %"}
-                                            />
-                                        </StyledGridItem>
-                                    </Grid>
-                                    <Divider sx={{ my: "8px" }} />
+                                {typeof servicePrices !== "undefined" && servicePrices[index] ? servicePrices[index].map((price, priceIndex) => (
+                                    <Box key={priceIndex + "_servicePrice_" + index}>
+                                        <Grid
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                textAlign: "center",
+                                            }}
+                                            container
+                                        >
+                                            <StyledGridItem item xs={12} sm={6} md={6} lg={3}>
+                                                <TextMedium14
+                                                    text={price.title}
+                                                />
+                                            </StyledGridItem>
+                                            <StyledGridItem item xs={12} sm={6} md={6} lg={4}>
+                                                <TextMedium14
+                                                    text={price.description}
+                                                />
+                                            </StyledGridItem>
+                                            <StyledGridItem item xs={12} sm={6} md={6} lg={2}>
+                                                {
+                                                    // price in eur
+                                                    <TextMedium14
+                                                        text={price.value + " €"}
+                                                    />
+                                                }
+                                            </StyledGridItem>
+                                            <StyledGridItem item xs={12} sm={6} md={6} lg={2}>
+                                                <TextMedium14
+                                                    text={(price.discount) ? price.discount + " %" : "0 %"}
+                                                />
+                                            </StyledGridItem>
+                                            <StyledGridItem item xs={12} sm={6} md={6} lg={1}>
+                                                <StyledButtonIconOnly
+                                                    icon={<Delete />}
+                                                    buttonFunction={() => {
+                                                        setServicePrices((prevState) => {
+                                                            const newState = [...prevState];
+                                                            newState[index].splice(priceIndex, 1);
+                                                            return newState;
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        display: "inline-block",
+
+                                                        '& svg': {
+                                                            width: "24px",
+                                                            height: "24px",
+                                                        }
+                                                    }}
+                                                />
+                                            </StyledGridItem>
+                                        </Grid>
+                                        <Divider sx={{ my: "8px" }} />
                                     </Box>
                                 ))
+                                    :
+                                    null
                                 }
                             </Box>
                             :
@@ -245,7 +279,6 @@ const ServicesPrices = (
                                         {StyledLabel("Naziv cijene")}
                                         <StyledInput
                                             clearInput={!open}
-                                            required
                                             inputVal={title}
                                             inputChangeFunction={setTitle}
                                             inputPlaceholder='Naziv cijene'

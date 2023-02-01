@@ -11,6 +11,7 @@ import {
     MenuItem,
     Select,
     Checkbox,
+    styled,
 } from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
 import { KeyboardArrowLeft } from '@mui/icons-material';
@@ -25,6 +26,11 @@ import { UploadFileFormLabel } from '../../app/components/common/styledInputs/st
 import StyledUpload from '../../app/components/common/styledInputs/styledUpload/styledUpload';
 import { InferGetStaticPropsType } from "next";
 import ServicesPrices from '../../app/components/servicePage/servicesPrices';
+import ServicesList from '../../app/components/servicePage/servicesList';
+
+const StyledFormControl = styled(FormControl)(() => ({
+    borderRadius: "12px"
+}));
 
 export const getStaticProps = async () => {
     const prisma = new PrismaClient();
@@ -55,12 +61,19 @@ const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getSta
     const [image, setImage] = React.useState("");
     const [slug, setSlug] = React.useState("");
     const [alt, setAlt] = React.useState("");
-    const [servicePrices, setServicePrices] = React.useState<{
+    const [servicesList, setServicesList] = React.useState<{
+        name: string;
+        description: string;
+        highlighted: number;
+    }[]>([]);
+    const [servicePrices, setServicePrices] = React.useState<
+    {
         title: string;
         description: string;
         value: number;
         discount: number;
-    }[]>([]);
+    }[][]
+>([]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -78,7 +91,8 @@ const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getSta
                 slug: slug,
                 alt: alt,
                 active: active,
-                prices: servicePrices
+                services_list: servicesList,
+                services_prices: servicePrices
             })
         })
             .then(res => {
@@ -188,7 +202,7 @@ const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getSta
                         </Grid>
                         <Grid item xs={12} sm={6} md={4} lg={3}>
                             {StyledLabel("Aktivan")}
-                            <FormControl fullWidth>
+                            <StyledFormControl fullWidth>
                                 <Select
                                     id="active-select"
                                     value={active}
@@ -210,11 +224,11 @@ const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getSta
                                     <MenuItem value={1}>Da</MenuItem>
                                     <MenuItem value={0}>Ne</MenuItem>
                                 </Select>
-                            </FormControl>
+                            </StyledFormControl>
                         </Grid>
                         <Grid item xs={12} sm={6} md={4} lg={3}>
                             {StyledLabel("Doktori")}
-                            <FormControl fullWidth>
+                            <StyledFormControl fullWidth>
                                 <Select
                                     multiple
                                     id="doctors-select"
@@ -243,7 +257,7 @@ const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getSta
                                         </MenuItem>
                                     ))}
                                 </Select>
-                            </FormControl>
+                            </StyledFormControl>
                         </Grid>
 
                         <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -270,7 +284,9 @@ const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getSta
             <Paper
                 elevation={3}
             >
-                <ServicesPrices
+                <ServicesList
+                    serviceList={servicesList}
+                    setServiceList={setServicesList}
                     servicePrices={servicePrices}
                     setServicePrices={setServicePrices}
                 />

@@ -100,6 +100,7 @@ const StyledInput = ({ boxSx, rows, multiline, maxRows, minRows, helperText, err
                 minRows={minRows ? minRows : undefined}
                 multiline={multiline ? multiline : undefined}
                 sx={{
+                    borderRadius: "12px",
                     backgroundColor: disabled ? theme.palette.action.disabledBackground : theme.palette.background.paper,
                 }}
                 FormHelperTextProps={{

@@ -761,14 +761,72 @@ app.post("/prisma/services", async (req, res) => {
             item_order: getOrder
         },
     })
-        .then((data) => {
-            // if body has prices array then create prices for this service
-            // prices array is an array of objects with name, description, price, discount
+        .then(async (data) => {
+            // if body has services_list then create services_list items for this service
+            // service list is an array of objects with name description and highlighted fields
+            if (typeof req.body.services_list !== "undefined" && req.body.services_list) {
+                const services_list = req.body.services_list;
+                const errors = [];
+                await services_list.forEach((item, index) => {
+                    prisma.services_list.create({
+                        data: {
+                            name: item.name,
+                            description: item.description,
+                            highlighted: item.highlighted,
+                            usluga_id: data.id,
+                            services_order: index,
+                            active: 1,
+                            create_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                        }
+                    })
+                        .then((data) => {
+                            // if services_prices exists then create services_prices items for this service
+                            // services_prices is an array of arrays of objects with title, description, value and discount fields
+                            if (typeof req.body.services_prices !== "undefined" && req.body.services_prices) {
+                                const services_prices = req.body.services_prices;
 
-            res.status(200).json({
-                success: true,
-                service: data,
-            });
+                                services_prices[index].forEach((item) => {
+                                    item.forEach((item, index) => {
+                                        prisma.services_price_list.create({
+                                            data: {
+                                                title: item.title,
+                                                description: item.description,
+                                                value: parseFloat(item.value),
+                                                discount: parseFloat(item.discount),
+                                                service_list_id: data.id,
+                                                item_order: index,
+                                                active: 1,
+                                                create_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                                            }
+                                        })
+                                            .then((data) => {
+                                                console.log(data, 'services_prices item created');
+                                            })
+                                            .catch((error) => {
+                                                console.log(error, 'error services_prices item');
+                                            })
+                                    });
+                                });
+                            }
+
+                            console.log(data, 'services_list item created');
+                        })
+                        .catch((error) => {
+                            console.log(error, 'error services_list item');
+                            errors.push(error);
+                        })
+                });
+
+                if (errors.length > 0) {
+                    res.status(400).json({
+                        success: false,
+                        error: errors
+                    });
+                    return;
+                }
+                else res.status(200).json({ success: true });
+            }
+            else res.status(200).json({ success: true });
         }
         )
         .catch((error) => {
