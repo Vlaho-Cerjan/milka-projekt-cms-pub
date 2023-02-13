@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { CustomThemeContext } from '../../store/customThemeContext';
 import { StyledContainer } from '../common/container/styledContainer';
-import { Title } from '../common/title/title';
+import Title from '../common/title/title';
 
 interface OurTeamProps {
     employes: {

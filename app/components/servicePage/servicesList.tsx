@@ -16,22 +16,26 @@ const StyledGridItem = styled(Grid)(({ theme }) => ({
 
 interface ServicesListProps {
     serviceList: {
+        id?: number;
         name: string;
         description: string;
         highlighted: number;
     }[];
     setServiceList: React.Dispatch<React.SetStateAction<{
+        id?: number;
         name: string;
         description: string;
         highlighted: number;
     }[]>>;
     servicePrices: {
+        id?: number;
         title: string;
         description: string;
         value: number;
         discount: number;
     }[][];
     setServicePrices: React.Dispatch<React.SetStateAction<{
+        id?: number;
         title: string;
         description: string;
         value: number;
@@ -52,7 +56,9 @@ const ServicesList = (
     const [name, setName] = React.useState("");
     const [description, setDescription] = React.useState("");
     const [highlighted, setHighlighted] = React.useState(0);
-
+    const [disabledName, setDisabledName] = React.useState<number>(-1);
+    const [disabledDescription, setDisabledDescription] = React.useState<number>(-1);
+    const [disabledHighlighted, setDisabledHighlighted] = React.useState<number>(-1);
     const handleEditClick = (id: number) => {
 
     }
@@ -141,15 +147,95 @@ const ServicesList = (
                                         }}
                                         container
                                     >
-                                        <StyledGridItem item xs={12} sm={6} md={6} lg={4}>
-                                            <TextBold14
-                                                text={price.name}
-                                            />
+                                        <StyledGridItem
+                                            item xs={12} sm={6} md={6} lg={4}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    position: "relative",
+                                                }}
+                                            >
+                                                <StyledInput
+                                                    InputProps={{
+                                                        readOnly: disabledName !== index,
+                                                        sx:{
+                                                            zIndex: disabledName === index ? theme.zIndex.drawer + 2 : 0,
+                                                            backgroundColor: disabledName === index ? theme.palette.primary.contrastText : "transparent",
+
+                                                            '& fieldset': {
+                                                                borderColor: disabledName === index ? undefined : "transparent",
+                                                            },
+
+                                                            '& input': {
+                                                                textAlign: "center"
+                                                            }
+                                                        }
+                                                    }}
+                                                    textFieldSx={{
+                                                        backgroundColor: disabledName === index ? theme.palette.primary.contrastText : "transparent",
+                                                    }}
+                                                    inputVal={price.name}
+                                                    inputChangeFunction={(e) => {
+                                                        const newList = [...serviceList];
+                                                        if(typeof e === "string"){
+                                                            newList[index].name = e;
+                                                        }
+                                                        else newList[index].name = e.target.value;
+                                                        setServiceList(newList);
+                                                    }}
+                                                    doubleClickChangeFunction={() => {
+                                                        console.log("Double click");
+                                                        setDisabledName(index);
+                                                    }}
+
+                                                />
+                                                <Backdrop sx={{ backgroundColor: theme.palette.divider, zIndex: disabledName===index ? theme.zIndex.drawer + 1 : 0 }} open={!disabledName} onClick={() => setDisabledName(-1)} />
+                                            </Box>
                                         </StyledGridItem>
                                         <StyledGridItem item xs={12} sm={6} md={6} lg={4}>
-                                            <TextBold14
-                                                text={price.description}
-                                            />
+                                        <Box
+                                                sx={{
+                                                    position: "relative",
+                                                }}
+                                            >
+                                                <StyledInput
+                                                    InputProps={{
+                                                        readOnly: disabledDescription !== index,
+                                                        sx:{
+                                                            zIndex: disabledDescription === index ? theme.zIndex.drawer + 2 : 0,
+                                                            backgroundColor: disabledDescription === index ? theme.palette.primary.contrastText : "transparent",
+
+                                                            '& fieldset': {
+                                                                borderColor: disabledDescription === index ? undefined : "transparent",
+                                                            },
+
+                                                            '& input': {
+                                                                textAlign: "center"
+                                                            }
+                                                        }
+                                                    }}
+                                                    textFieldSx={{
+                                                        backgroundColor: disabledDescription === index ? theme.palette.primary.contrastText : "transparent",
+                                                    }}
+                                                    inputVal={price.description}
+                                                    inputChangeFunction={(e) => {
+                                                        const newList = [...serviceList];
+                                                        if(typeof e === "string"){
+                                                            newList[index].description = e;
+                                                        }
+                                                        else newList[index].description = e.target.value;
+                                                        setServiceList(newList);
+                                                    }}
+                                                    doubleClickChangeFunction={() => {
+                                                        console.log("Double click");
+                                                        setDisabledDescription(index);
+                                                    }}
+
+                                                />
+                                                <Backdrop sx={{ backgroundColor: theme.palette.divider, zIndex: disabledDescription===index ? theme.zIndex.drawer + 1 : 0 }} open={!disabledDescription} onClick={() => {
+                                                    setDisabledDescription(-1);
+                                                }} />
+                                            </Box>
                                         </StyledGridItem>
                                         <StyledGridItem item xs={12} sm={6} md={6} lg={2}>
                                             {

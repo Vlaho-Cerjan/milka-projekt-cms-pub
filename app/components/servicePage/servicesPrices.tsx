@@ -1,12 +1,9 @@
 import { Backdrop, Box, Button, Divider, FormControl, Grid, Typography } from '@mui/material';
-import { services_price_list } from '@prisma/client';
-import Title from "../common/title/title";
 import React from 'react';
-import { TextBold14, TextBlack14, TextBlack18, TextMedium14 } from '../common/styledInputs/styledText/styledText';
+import { TextBold14, TextBlack18, TextMedium14 } from '../common/styledInputs/styledText/styledText';
 import { CustomThemeContext } from '../../store/customThemeContext';
 import { StyledLabel } from '../common/styledInputs/styledLabel/styledLabel';
 import StyledInput from '../common/styledInputs/styledInput';
-import { borderRadius } from '@mui/system';
 import { styled } from '@mui/material/styles';
 import StyledButtonIconOnly from '../common/styledInputs/styledButtons/styledButtonIconOnly';
 import { Delete } from '@mui/icons-material';
@@ -18,12 +15,14 @@ const StyledGridItem = styled(Grid)(({ theme }) => ({
 interface ServicesPricesProps {
     index: number;
     servicePrices: {
+        id?: number;
         title: string;
         description: string;
         value: number;
         discount: number;
     }[][];
     setServicePrices: React.Dispatch<React.SetStateAction<{
+        id?: number;
         title: string;
         description: string;
         value: number;
@@ -44,6 +43,10 @@ const ServicesPrices = (
     const [description, setDescription] = React.useState("");
     const [value, setValue] = React.useState(0);
     const [discount, setDiscount] = React.useState(0);
+    const [disabledTitle, setDisabledTitle] = React.useState<number>(-1);
+    const [disabledDescription, setDisabledDescription] = React.useState<number>(-1);
+    const [disabledValue, setDisabledValue] = React.useState<number>(-1);
+    const [disabledDiscount, setDisabledDiscount] = React.useState<number>(-1);
 
     const openPriceModal = () => {
         console.log("Open price modal");
@@ -140,27 +143,188 @@ const ServicesPrices = (
                                             container
                                         >
                                             <StyledGridItem item xs={12} sm={6} md={6} lg={3}>
-                                                <TextMedium14
-                                                    text={price.title}
-                                                />
+                                                <Box
+                                                    sx={{
+                                                        position: "relative",
+                                                    }}
+                                                >
+                                                    <StyledInput
+                                                        InputProps={{
+                                                            readOnly: disabledTitle !== index * 10 + priceIndex,
+                                                            sx: {
+                                                                zIndex: disabledTitle === index * 10 + priceIndex ? theme.zIndex.drawer + 2 : 0,
+                                                                backgroundColor: disabledTitle === index * 10 + priceIndex ? theme.palette.primary.contrastText : "transparent",
+
+                                                                '& fieldset': {
+                                                                    borderColor: disabledTitle === index * 10 + priceIndex ? undefined : "transparent",
+                                                                },
+
+                                                                '& input': {
+                                                                    textAlign: "center"
+                                                                }
+                                                            }
+                                                        }}
+                                                        textFieldSx={{
+                                                            backgroundColor: disabledTitle === index * 10 + priceIndex ? theme.palette.primary.contrastText : "transparent",
+                                                        }}
+                                                        inputVal={price.title}
+                                                        inputChangeFunction={(e) => {
+                                                            const newServicePrices = [...servicePrices];
+                                                            if (typeof e === "string") newServicePrices[index][priceIndex].title = e;
+                                                            else newServicePrices[index][priceIndex].title = e.target.value;
+                                                            setServicePrices(newServicePrices);
+                                                        }}
+                                                        doubleClickChangeFunction={() => {
+                                                            console.log("Double click");
+                                                            setDisabledTitle(index * 10 + priceIndex);
+                                                        }}
+
+                                                    />
+                                                    <Backdrop sx={{ backgroundColor: theme.palette.divider, zIndex: disabledTitle === index * 10 + priceIndex ? theme.zIndex.drawer + 1 : 0 }} open={disabledTitle === index*10+priceIndex} onClick={() => setDisabledTitle(-1)} />
+                                                </Box>
                                             </StyledGridItem>
                                             <StyledGridItem item xs={12} sm={6} md={6} lg={4}>
-                                                <TextMedium14
-                                                    text={price.description}
-                                                />
-                                            </StyledGridItem>
-                                            <StyledGridItem item xs={12} sm={6} md={6} lg={2}>
-                                                {
-                                                    // price in eur
-                                                    <TextMedium14
-                                                        text={price.value + " €"}
+                                                <Box
+                                                    sx={{
+                                                        position: "relative",
+                                                    }}
+                                                >
+                                                    <StyledInput
+                                                        InputProps={{
+                                                            readOnly: disabledDescription !== index * 10 + priceIndex,
+                                                            sx: {
+                                                                zIndex: disabledDescription === index * 10 + priceIndex ? theme.zIndex.drawer + 2 : 0,
+                                                                backgroundColor: disabledDescription === index * 10 + priceIndex ? theme.palette.primary.contrastText : "transparent",
+
+                                                                '& fieldset': {
+                                                                    borderColor: disabledDescription === index * 10 + priceIndex ? undefined : "transparent",
+                                                                },
+
+                                                                '& input': {
+                                                                    textAlign: "center"
+                                                                }
+                                                            }
+                                                        }}
+                                                        textFieldSx={{
+                                                            backgroundColor: disabledDescription === index * 10 + priceIndex ? theme.palette.primary.contrastText : "transparent",
+                                                        }}
+                                                        inputVal={price.description}
+                                                        inputChangeFunction={(e) => {
+                                                            const newServicePrices = [...servicePrices];
+                                                            if (typeof e === "string") newServicePrices[index][priceIndex].description = e;
+                                                            else newServicePrices[index][priceIndex].description = e.target.value;
+                                                            setServicePrices(newServicePrices);
+                                                        }}
+                                                        doubleClickChangeFunction={() => {
+                                                            console.log("Double click");
+                                                            setDisabledDescription(index * 10 + priceIndex);
+                                                        }}
+
                                                     />
-                                                }
+                                                    <Backdrop sx={{ backgroundColor: theme.palette.divider, zIndex: disabledDescription === index * 10 + priceIndex ? theme.zIndex.drawer + 1 : 0 }} open={disabledDescription === index*10+priceIndex} onClick={() => setDisabledDescription(-1)} />
+                                                </Box>
                                             </StyledGridItem>
                                             <StyledGridItem item xs={12} sm={6} md={6} lg={2}>
-                                                <TextMedium14
-                                                    text={(price.discount) ? price.discount + " %" : "0 %"}
-                                                />
+                                                <Box
+                                                    sx={{
+                                                        position: "relative",
+                                                    }}
+                                                >
+                                                    <StyledInput
+                                                        InputProps={{
+                                                            readOnly: disabledValue !== index * 10 + priceIndex,
+                                                            sx: {
+                                                                zIndex: disabledValue === index * 10 + priceIndex ? theme.zIndex.drawer + 2 : 0,
+                                                                backgroundColor: disabledValue === index * 10 + priceIndex ? theme.palette.primary.contrastText : "transparent",
+
+                                                                '& fieldset': {
+                                                                    borderColor: disabledValue === index * 10 + priceIndex ? undefined : "transparent",
+                                                                },
+
+                                                                '& input': {
+                                                                    textAlign: "center",
+                                                                    marginRight: "-32px",
+                                                                    '-webkit-appearance': 'textfield',
+
+                                                                    '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                                                                        '-webkit-appearance': 'none',
+                                                                        margin: 0,
+                                                                    },
+                                                                }
+                                                            }
+                                                        }}
+                                                        type='number'
+                                                        textFieldSx={{
+                                                            backgroundColor: disabledValue === index * 10 + priceIndex ? theme.palette.primary.contrastText : "transparent",
+                                                        }}
+                                                        inputVal={price.value}
+                                                        inputChangeFunction={(e) => {
+                                                            const newServicePrices = [...servicePrices];
+                                                            if (typeof e === "string") newServicePrices[index][priceIndex].value = parseFloat(e);
+                                                            else newServicePrices[index][priceIndex].value = e.target.value;
+                                                            setServicePrices(newServicePrices);
+                                                        }}
+                                                        doubleClickChangeFunction={() => {
+                                                            console.log("Double click");
+                                                            setDisabledValue(index * 10 + priceIndex);
+                                                        }}
+                                                        inputIcon={"€"}
+
+
+                                                    />
+                                                    <Backdrop sx={{ backgroundColor: theme.palette.divider, zIndex: disabledValue === index * 10 + priceIndex ? theme.zIndex.drawer + 1 : 0 }} open={disabledValue === index*10+priceIndex} onClick={() => setDisabledValue(-1)} />
+                                                </Box>
+                                            </StyledGridItem>
+                                            <StyledGridItem item xs={12} sm={6} md={6} lg={2}>
+                                            <Box
+                                                    sx={{
+                                                        position: "relative",
+                                                    }}
+                                                >
+                                                    <StyledInput
+                                                        InputProps={{
+                                                            readOnly: disabledDiscount !== index * 10 + priceIndex,
+                                                            sx: {
+                                                                zIndex: disabledDiscount === index * 10 + priceIndex ? theme.zIndex.drawer + 2 : 0,
+                                                                backgroundColor: disabledDiscount === index * 10 + priceIndex ? theme.palette.primary.contrastText : "transparent",
+
+                                                                '& fieldset': {
+                                                                    borderColor: disabledDiscount === index * 10 + priceIndex ? undefined : "transparent",
+                                                                },
+
+                                                                '& input': {
+                                                                    textAlign: "center",
+                                                                    marginRight: "-32px",
+                                                                    '-webkit-appearance': 'textfield',
+
+                                                                    '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+                                                                        '-webkit-appearance': 'none',
+                                                                        margin: 0,
+                                                                    },
+                                                                }
+                                                            }
+                                                        }}
+                                                        textFieldSx={{
+                                                            backgroundColor: disabledDiscount === index * 10 + priceIndex ? theme.palette.primary.contrastText : "transparent",
+                                                        }}
+                                                        inputVal={price.discount}
+                                                        inputChangeFunction={(e) => {
+                                                            const newServicePrices = [...servicePrices];
+                                                            if (typeof e === "string") newServicePrices[index][priceIndex].discount = parseFloat(e);
+                                                            else newServicePrices[index][priceIndex].discount = e.target.value;
+                                                            setServicePrices(newServicePrices);
+                                                        }}
+                                                        doubleClickChangeFunction={() => {
+                                                            console.log("Double click");
+                                                            setDisabledDiscount(index * 10 + priceIndex);
+                                                        }}
+                                                        type='number'
+                                                        inputIcon={"%"}
+
+
+                                                    />
+                                                    <Backdrop sx={{ backgroundColor: theme.palette.divider, zIndex: disabledDiscount === index * 10 + priceIndex ? theme.zIndex.drawer + 1 : 0 }} open={disabledDiscount === index*10+priceIndex} onClick={() => setDisabledDiscount(-1)} />
+                                                </Box>
                                             </StyledGridItem>
                                             <StyledGridItem item xs={12} sm={6} md={6} lg={1}>
                                                 <StyledButtonIconOnly

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { CustomThemeContext } from '../../store/customThemeContext';
 import useWindowSize from '../../utility/windowSize';
 import { StyledContainer } from '../common/container/styledContainer';
-import { Title } from '../common/title/title';
+import Title from '../common/title/title';
 
 const MissionAndVision = () => {
     const { theme } = useContext(CustomThemeContext);

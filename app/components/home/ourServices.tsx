@@ -3,7 +3,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { StyledContainer } from '../common/container/styledContainer';
-import { Title } from '../common/title/title';
+import Title from '../common/title/title';
 
 const StyledCard = styled(Card)(() => ({
     height: "100%",

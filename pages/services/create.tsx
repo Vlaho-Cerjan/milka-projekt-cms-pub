@@ -62,18 +62,20 @@ const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getSta
     const [slug, setSlug] = React.useState("");
     const [alt, setAlt] = React.useState("");
     const [servicesList, setServicesList] = React.useState<{
+        id?: number;
         name: string;
         description: string;
         highlighted: number;
     }[]>([]);
     const [servicePrices, setServicePrices] = React.useState<
-    {
-        title: string;
-        description: string;
-        value: number;
-        discount: number;
-    }[][]
->([]);
+        {
+            id?: number;
+            title: string;
+            description: string;
+            value: number;
+            discount: number;
+        }[][]
+    >([]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -88,7 +90,8 @@ const CreateServicePage = ({ db_doctors }: InferGetStaticPropsType<typeof getSta
                 description: description,
                 doctors_id: doctors,
                 img_src: image,
-                slug: slug,
+                // check if slug has / in the first character and put it if it doesn't
+                slug: slug.charAt(0) === "/" ? slug : "/" + slug,
                 alt: alt,
                 active: active,
                 services_list: servicesList,

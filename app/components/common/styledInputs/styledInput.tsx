@@ -24,7 +24,8 @@ interface InputComponentProps {
     inputLabel?: string,
     inputPlaceholder?: string,
     inputChangeFunction?: (value: any) => void,
-    inputIcon?: ReactElement<any, any>,
+    doubleClickChangeFunction?: (value?: any) => void,
+    inputIcon?: any,
     inputIconFunction?: (value: string) => void,
     required?: boolean,
     inputVal?: string | number | null,
@@ -43,9 +44,10 @@ interface InputComponentProps {
     maxRows?: number,
     minRows?: number,
     boxSx?: SxProps<Theme>,
+    textFieldSx?: SxProps<Theme>,
 }
 
-const StyledInput = ({ boxSx, rows, multiline, maxRows, minRows, helperText, error, id, name, type, autoComplete, inputLabel, inputPlaceholder, inputChangeFunction, inputIcon, inputIconFunction, required, inputVal, clearInput, disabled, InputProps, InputLabelProps }: InputComponentProps) => {
+const StyledInput = ({ textFieldSx, boxSx, rows, multiline, maxRows, minRows, helperText, error, id, name, type, autoComplete, inputLabel, inputPlaceholder, doubleClickChangeFunction, inputChangeFunction, inputIcon, inputIconFunction, required, inputVal, clearInput, disabled, InputProps, InputLabelProps }: InputComponentProps) => {
     const IconFunction = (props: ButtonProps) => (
         <Button
             onClick={() => {
@@ -64,7 +66,7 @@ const StyledInput = ({ boxSx, rows, multiline, maxRows, minRows, helperText, err
     const { theme } = React.useContext(CustomThemeContext);
 
     React.useEffect((): void => {
-        if (inputVal) setInputValue(inputVal);
+        if (typeof inputVal !== "undefined" || inputVal !== null) setInputValue(inputVal);
         else setInputValue("");
     }, [inputVal])
 
@@ -102,6 +104,7 @@ const StyledInput = ({ boxSx, rows, multiline, maxRows, minRows, helperText, err
                 sx={{
                     borderRadius: "12px",
                     backgroundColor: disabled ? theme.palette.action.disabledBackground : theme.palette.background.paper,
+                    ...textFieldSx,
                 }}
                 FormHelperTextProps={{
                     sx: {
@@ -117,6 +120,9 @@ const StyledInput = ({ boxSx, rows, multiline, maxRows, minRows, helperText, err
                     if (typeof inputChangeFunction !== "undefined") inputChangeFunction(e.target.value);
                 }
                 }
+                onDoubleClick={() => {
+                    if (typeof doubleClickChangeFunction !== "undefined") doubleClickChangeFunction(inputValue);
+                }}
                 inputRef={inputRef}
                 inputProps={{
                     style: {

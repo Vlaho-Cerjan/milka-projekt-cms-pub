@@ -11,6 +11,7 @@ import {
     MenuItem,
     Select,
     styled,
+    Checkbox,
 } from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
 import { KeyboardArrowLeft } from '@mui/icons-material';
@@ -24,55 +25,41 @@ import StyledUpload from '../../app/components/common/styledInputs/styledUpload/
 import { UploadFileContainer } from '../../app/components/common/styledInputs/styledUploadFormContainer/styledUploadFormContainer';
 import { UploadFileFormLabel } from '../../app/components/common/styledInputs/styledUploadFormLabel/styledUploadFormLabel';
 import StyledSearchAutoComplete from '../../app/components/common/styledInputs/styledSearchAutocomplete/styledSearchAutocomplete';
-
-const StyledGrid = styled(Grid)(({ theme }) => ({
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "flex-end",
-}));
+import ServicesList from '../../app/components/servicePage/servicesList';
+import { InferGetStaticPropsType } from 'next';
 
 export const getStaticProps = async ({ params }: { params: { serviceHref: string } }) => {
     const prisma = new PrismaClient();
 
-    const services = await prisma.services.findMany();
-
-    let service = await prisma.services.findFirst({
+    const service = await prisma.services.findFirst({
         where: {
             slug: params.serviceHref === "naslovna" ? "/" : "/" + params.serviceHref,
             active: 1
         }
     });
 
-    const subservices = await prisma.subservices.findMany({
+    const service_list = await prisma.services_list.findMany({
         where: {
-            active: 1
+            usluga_id: service?.id
         }
     });
 
-    const doctors = await prisma.doctors.findMany();
+    const service_price_list = await prisma.services_price_list.findMany({
+        where: {
+            service_list_id: {
+                in: service_list.map((service) => service.id)
+            }
+        }
+    });
 
-    if (service) {
-        const tempService = {
-            ...service,
-            subservices: subservices.filter((subservice) => subservice.usluga_id === (service ? service.id : 0)),
-        };
-
-        service = tempService
-
-        return {
-            props: {
-                service,
-                services,
-                doctors
-            },
-        };
-    }
+    const db_doctors = await prisma.doctors.findMany();
 
     return {
         props: {
-            service: null,
-            services,
-            doctors
+            service,
+            db_doctors,
+            service_list,
+            service_price_list
         },
     };
 
@@ -98,125 +85,83 @@ export const getStaticPaths = async () => {
     return { paths, fallback: false };
 }
 
-interface service_with_subservices extends services {
-    subservices: subservices[];
-}
+const StyledFormControl = styled(FormControl)(() => ({
+    borderRadius: "12px"
+}));
 
-interface NavPageProps {
-    service: service_with_subservices | null;
-    services: services[];
-    doctors: doctors[];
-}
-
-const NavPage = ({ service, services, doctors }: NavPageProps) => {
+const NavPage = ({ service, db_doctors, service_list, service_price_list }: InferGetStaticPropsType<typeof getStaticProps>) => {
     const router = useRouter();
     const { isDark, theme } = React.useContext(CustomThemeContext);
     const { enqueueSnackbar } = useSnackbar();
-    const [name, setName] = React.useState(service?.name);
-    const [description, setDescription] = React.useState(service?.description);
-    const [alt, setAlt] = React.useState(service?.alt);
-    const [img_src, setImgSrc] = React.useState(service?.img_src ? service?.img_src : "");
-    const [slug, setSlug] = React.useState(service?.slug);
-    const [active, setActive] = React.useState(service?.active);
-    const [currentDoctors, setCurrentDoctors] = React.useState<{ id: number, name: string, label: string }[]>([]);
-    const [selectedDoctors, setSelectedDoctors] = React.useState<{ id: number, name: string, label: string }[]>([]);
-
-    const fetchFilteredDoctors = (searchVal: string, selItems: any[] | null, setCurrentItems: React.Dispatch<React.SetStateAction<any[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, signal?: AbortSignal) => {
-        setLoading(true);
-        if(searchVal === "") {
-            if(selItems) {
-                const filteredDoctors = doctors.filter((doctor) => {
-                    return !selItems.find((selItem) => selItem.id === doctor.id);
-                }
-                ).map((doctor) => {
-                    return {
-                        id: doctor.id,
-                        name: doctor.first_name + " " + doctor.last_name,
-                        label: doctor.first_name + " " + doctor.last_name,
-                    }
-                }
-                );
-                setCurrentItems(filteredDoctors);
-            }else{
-                const filteredDoctors = doctors.map((doctor) => {
-                    return {
-                        id: doctor.id,
-                        name: doctor.first_name + " " + doctor.last_name,
-                        label: doctor.first_name + " " + doctor.last_name,
-                    }
-                }
-                );
-                setCurrentItems(filteredDoctors);
-            }
-            setLoading(false);
-            return;
-        }
-        fetch(process.env.NEXT_PUBLIC_API_URL + "doctors/filter", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                filter: searchVal,
-            }),
-        })
-            .then((res) => res.json())
-            .then((res: { success: boolean, doctors: doctors[] }) => {
-                if (res.success) {
-                    const filteredDoctors = res.doctors.filter((doctor) => {
-                        if (selItems) {
-                            return !selItems.find((selItem) => selItem.id === doctor.id);
-                        }
-                        return true;
-                    }).map((doctor) => {
-                        return {
-                            id: doctor.id,
-                            name: doctor.first_name + " " + doctor.last_name,
-                            label: doctor.first_name + " " + doctor.last_name
-                        }
-                    });
-                    setCurrentItems(filteredDoctors);
-                }
-            })
-            .catch((err) => {
-                console.log(err);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }
+    const [name, setName] = React.useState("");
+    const [description, setDescription] = React.useState("");
+    const [doctors, setDoctors] = React.useState<number[]>([]);
+    const [active, setActive] = React.useState(1);
+    const [image, setImage] = React.useState("");
+    const [slug, setSlug] = React.useState("");
+    const [alt, setAlt] = React.useState("");
+    const [servicesList, setServicesList] = React.useState<{
+        id?: number;
+        name: string;
+        description: string;
+        highlighted: number;
+    }[]>([]);
+    const [servicePrices, setServicePrices] = React.useState<
+        {
+            id?: number;
+            title: string;
+            description: string;
+            value: number;
+            discount: number;
+        }[][]
+    >([]);
 
     React.useEffect(() => {
-        if (doctors && service) {
-            const dbDoctors = doctors.filter((doctor) => {
-                if (service.doctors_id) {
-                    return service.doctors_id.split(",").includes(doctor.id.toString());
-                }
-                return false;
-            }).map((doctor) => {
-                return {
-                    id: doctor.id,
-                    name: doctor.first_name + " " + doctor.last_name,
-                    label: doctor.first_name + " " + doctor.last_name
-                }
-            });
-            const doctors_list: { id: number, name: string, label: string }[] = [];
-            doctors.forEach((doctor) => {
-                if (!dbDoctors.find((dbDoctor) => dbDoctor.id === doctor.id)) {
-                    doctors_list.push({
-                        id: doctor.id,
-                        name: doctor.first_name + " " + doctor.last_name,
-                        label: doctor.first_name + " " + doctor.last_name
-                    });
-                }
-            });
-
-            //console.log(dbDoctors, doctors_list, 'doctors');
-
-            setCurrentDoctors(doctors_list);
-            setSelectedDoctors(dbDoctors);
+        if (service) {
+            const doctors = service.doctors_id ? service.doctors_id.split(",").map((id) => parseInt(id)) : [];
+            setName(service.name);
+            setDescription(service.description ? service.description : "");
+            setDoctors(doctors);
+            setActive(service.active);
+            setImage(service.img_src ? service.img_src : "");
+            setSlug(service.slug ? service.slug : "");
+            setAlt(service.alt ? service.alt : "");
         }
-    }, [doctors]);
+        console.log(service, "service")
+    }, [service]);
+
+    React.useEffect(() => {
+        if (service_list) {
+            const servicesList = service_list.map((tempService) => ({
+                id: tempService.id ? tempService.id : undefined,
+                name: tempService.name,
+                description: tempService.description ? tempService.description : "",
+                highlighted: tempService.highlighted
+            }));
+            //console.log(servicesList, "servicesList");
+            setServicesList(servicesList);
+
+            if (service_price_list) {
+                const servicePrices = servicesList.map((tempService) => {
+                    const servicePrices = service_price_list.filter((servicePrice) => servicePrice.service_list_id === tempService.id);
+                    return servicePrices.map((servicePrice) => ({
+                        id: servicePrice.id ? servicePrice.id : undefined,
+                        title: servicePrice.title ? servicePrice.title : "",
+                        description: servicePrice.description ? servicePrice.description : "",
+                        value: servicePrice.value,
+                        discount: servicePrice.discount ? servicePrice.discount : 0
+                    }));
+                });
+                //console.log(servicePrices, "servicePrices");
+                setServicePrices(servicePrices);
+            }
+        }
+    }, []);
+
+    React.useEffect(() => {
+        console.log(servicesList, "servicesList");
+        console.log(servicePrices, "servicePrices");
+    }, [servicesList, servicePrices]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -229,20 +174,23 @@ const NavPage = ({ service, services, doctors }: NavPageProps) => {
             body: JSON.stringify({
                 id: service?.id,
                 name: name,
-                slug: slug,
                 description: description,
+                // string of doctors ids
+                doctors_id: doctors.join(","),
+                img_src: image,
+                slug: slug,
                 alt: alt,
-                img_src: img_src,
                 active: active,
-                doctors_id: selectedDoctors.map((doctor) => doctor.id).join(",")
+                services_list: servicesList,
+                services_prices: servicePrices
             })
         })
             .then(res => {
                 if (res.status === 200) {
-                    enqueueSnackbar("Uspješno ste ažurirali podatke", { variant: "success" });
+                    enqueueSnackbar("Uspješno ste stvorili uslugu", { variant: "success" });
                     router.back();
                 } else if (res.status === 400) {
-                    enqueueSnackbar("Greška prilikom ažuriranja podataka", { variant: "error" });
+                    enqueueSnackbar("Greška prilikom stvaranja", { variant: "error" });
                 }
             })
             .catch(err => {
@@ -264,7 +212,7 @@ const NavPage = ({ service, services, doctors }: NavPageProps) => {
                 }
             } />
             <Typography component="h1" variant="h4" sx={{ mb: "32px" }}>
-                {service?.name ? service?.name : "Navigacija"}
+                {service?.name ? service?.name : "Usluga"}
             </Typography>
             <Paper
                 component={"form"}
@@ -313,7 +261,7 @@ const NavPage = ({ service, services, doctors }: NavPageProps) => {
                     }}
                 >
                     <Grid container spacing={2}>
-                        <StyledGrid item xs={12} sm={6} md={6} lg={3}>
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
                             {StyledLabel("Ime")}
                             <StyledInput
                                 inputVal={name}
@@ -321,21 +269,32 @@ const NavPage = ({ service, services, doctors }: NavPageProps) => {
                                 inputChangeFunction={setName}
                                 required
                             />
-                        </StyledGrid>
-                        <StyledGrid item xs={12} sm={6} md={6} lg={3}>
-                            {StyledLabel("Slug - unesite # za uslugu koja nema slug")}
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
+                            {StyledLabel("Opis")}
+                            <StyledInput
+                                inputVal={description}
+                                multiline
+                                minRows={5}
+                                inputPlaceholder={"Unesi opis"}
+                                inputChangeFunction={setDescription}
+                                required
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
+                            {StyledLabel("Slug")}
                             <StyledInput
                                 inputVal={slug}
-                                inputPlaceholder={"Unesi slug (URL)"}
+                                inputPlaceholder={"Unesi slug/href (npr. 'ime-usluge')"}
                                 inputChangeFunction={setSlug}
                                 required
                             />
-                        </StyledGrid>
-                        <StyledGrid item xs={12} sm={6} md={6} lg={3}>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
                             {StyledLabel("Aktivan")}
-                            <FormControl fullWidth>
+                            <StyledFormControl fullWidth>
                                 <Select
-                                    id="demo-simple-select"
+                                    id="active-select"
                                     value={active}
                                     onChange={(e) => setActive(e.target.value as number)}
                                     sx={{
@@ -355,66 +314,72 @@ const NavPage = ({ service, services, doctors }: NavPageProps) => {
                                     <MenuItem value={1}>Da</MenuItem>
                                     <MenuItem value={0}>Ne</MenuItem>
                                 </Select>
-                            </FormControl>
-                        </StyledGrid>
-                        <StyledGrid item xs={12} sm={6} md={6} lg={3}>
-                            {StyledLabel("Alt")}
+                            </StyledFormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
+                            {StyledLabel("Doktori")}
+                            <StyledFormControl fullWidth>
+                                <Select
+                                    multiple
+                                    id="doctors-select"
+                                    placeholder='Odaberi doktore'
+                                    aria-placeholder='Odaberi doktore'
+                                    value={doctors}
+                                    onChange={(e) => setDoctors(e.target.value as number[])}
+                                    sx={{
+                                        fontSize: "14px",
+
+                                        '& fieldset': {
+                                            borderRadius: "12px",
+                                            borderWidth: "2px",
+                                        },
+
+                                        '& .MuiSelect-select': {
+                                            fontSize: "1em",
+                                            fontWeight: 500,
+                                        },
+                                    }}
+                                >
+                                    {db_doctors.map((doctor) => (
+                                        <MenuItem sx={{ display: "flex", alignItems: "center" }} key={doctor.id} value={doctor.id}>
+                                            <Checkbox sx={{ padding: "0 4px 0 0" }} checked={doctors.indexOf(doctor.id) > -1} />
+                                            {doctor.first_name + " " + (doctor.aditional_names ? doctor.aditional_names + " " : "") + doctor.last_name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </StyledFormControl>
+                        </Grid>
+
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
+                            {StyledLabel("Opis slike (alt)")}
                             <StyledInput
                                 inputVal={alt}
-                                inputPlaceholder={"Unesi alt za sliku"}
-                                inputChangeFunction={setAlt}
-                            />
-                        </StyledGrid>
-                        <StyledGrid
-                            sx={{
-                                height: "100%",
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "flex-start",
-                            }}
-                            item xs={12} sm={6} md={6} lg={3}>
-                            {StyledLabel("Doktori")}
-                            <StyledSearchAutoComplete
-                                fetchItems={fetchFilteredDoctors}
-                                currentItems={currentDoctors}
-                                setCurrentItems={setCurrentDoctors}
-                                selectedItems={selectedDoctors}
-                                setSelectedItems={setSelectedDoctors}
-                                title="Doktori"
-                                searchPlaceholder="Pretraži doktore"
-                            />
-                        </StyledGrid>
-                        <StyledGrid item xs={12} sm={6} md={6} lg={3}>
-                            {StyledLabel("Opis")}
-                            <StyledInput
-                                inputVal={description}
-                                inputPlaceholder={"Unesi ime"}
-                                inputChangeFunction={setDescription}
                                 multiline
-                                minRows={6}
-                                boxSx={{
-                                    height: "100%"
-                                }}
-                                InputProps={{
-                                    sx: {
-                                        height: "100%",
-                                        minHeight: "150px",
-
-                                        '.MuiInputBase-input': {
-                                            height: "100% !important",
-                                        }
-                                    }
-                                }}
+                                minRows={5}
+                                inputPlaceholder={"Unesi opis slike (alt)"}
+                                inputChangeFunction={setAlt}
+                                required
                             />
-                        </StyledGrid>
-                        <StyledGrid item xs={12} sm={12} md={12} lg={6}>
+                        </Grid>
+                        <Grid item xs={12} sm={12} md={6} lg={6}>
                             <UploadFileContainer>
-                                <UploadFileFormLabel>META SLIKA</UploadFileFormLabel>
-                                <StyledUpload aspectRatio={1.91 / 1} type="image" file={img_src} setFile={setImgSrc} resizeSizes={{ width: 720, height: 480 }} />
+                                <UploadFileFormLabel>SLIKA (600x337.5)</UploadFileFormLabel>
+                                <StyledUpload aspectRatio={16 / 9} type="image" file={image} setFile={setImage} resizeSizes={{ width: 600, height: 337.5 }} />
                             </UploadFileContainer>
-                        </StyledGrid>
+                        </Grid>
                     </Grid>
                 </Box>
+            </Paper>
+            <Divider sx={{ my: "16px", borderBottomWidth: "2px" }} />
+            <Paper
+                elevation={3}
+            >
+                <ServicesList
+                    serviceList={servicesList}
+                    setServiceList={setServicesList}
+                    servicePrices={servicePrices}
+                    setServicePrices={setServicePrices}
+                />
             </Paper>
         </StyledContainer>
     )

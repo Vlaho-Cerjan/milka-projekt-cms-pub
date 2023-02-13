@@ -48,8 +48,8 @@ app.use(express.json({
 
 app.post("/prisma/page_info", async (req, res) => {
     if (typeof req.body.image !== "undefined" && req.body.image) {
-        const imageName =  await SaveImageToDir(req.body.image, null, "/public/images/page_info/");
-        if(imageName) req.body.image = "/images/page_info/" + imageName;
+        const imageName = await SaveImageToDir(req.body.image, null, "/public/images/page_info/");
+        if (imageName) req.body.image = "/images/page_info/" + imageName;
     }
 
     prisma.page_info.create({
@@ -90,8 +90,8 @@ app.post("/prisma/page_info", async (req, res) => {
 
 app.put("/prisma/page_info", async (req, res) => {
     if (typeof req.body.image !== "undefined" && req.body.image) {
-        const imageName =  await SaveImageToDir(req.body.image, null, "/public/images/page_info/");
-        if(imageName) req.body.image = "/images/page_info/" + imageName;
+        const imageName = await SaveImageToDir(req.body.image, null, "/public/images/page_info/");
+        if (imageName) req.body.image = "/images/page_info/" + imageName;
     }
 
     prisma.page_info.update({
@@ -719,8 +719,8 @@ app.get("/prisma/services_with_subservices", (req, res) => {
 
 app.post("/prisma/services", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
-        const imageName =  await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
-        if(imageName) req.body.img_src = "/images/home/" + imageName;
+        const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
+        if (imageName) req.body.img_src = "/images/home/" + imageName;
     }
 
     const getOrder = await prisma.services.findMany({
@@ -784,28 +784,26 @@ app.post("/prisma/services", async (req, res) => {
                             // services_prices is an array of arrays of objects with title, description, value and discount fields
                             if (typeof req.body.services_prices !== "undefined" && req.body.services_prices) {
                                 const services_prices = req.body.services_prices;
-
+                                console.log(services_prices, 'services_prices');
                                 services_prices[index].forEach((item) => {
-                                    item.forEach((item, index) => {
-                                        prisma.services_price_list.create({
-                                            data: {
-                                                title: item.title,
-                                                description: item.description,
-                                                value: parseFloat(item.value),
-                                                discount: parseFloat(item.discount),
-                                                service_list_id: data.id,
-                                                item_order: index,
-                                                active: 1,
-                                                create_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
-                                            }
+                                    prisma.services_price_list.create({
+                                        data: {
+                                            title: item.title,
+                                            description: item.description,
+                                            value: parseFloat(item.value),
+                                            discount: parseFloat(item.discount),
+                                            service_list_id: data.id,
+                                            item_order: index,
+                                            active: 1,
+                                            create_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                                        }
+                                    })
+                                        .then((data) => {
+                                            console.log(data, 'services_prices item created');
                                         })
-                                            .then((data) => {
-                                                console.log(data, 'services_prices item created');
-                                            })
-                                            .catch((error) => {
-                                                console.log(error, 'error services_prices item');
-                                            })
-                                    });
+                                        .catch((error) => {
+                                            console.log(error, 'error services_prices item');
+                                        })
                                 });
                             }
 
@@ -855,8 +853,8 @@ app.post("/prisma/services", async (req, res) => {
 
 app.put("/prisma/services", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
-        const imageName =  await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
-        if(imageName) req.body.img_src = "/images/home/" + imageName;
+        const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
+        if (imageName) req.body.img_src = "/images/home/" + imageName;
     }
 
     const tempData = RemoveNullValues({
@@ -879,12 +877,231 @@ app.put("/prisma/services", async (req, res) => {
         }
     })
         .then((data) => {
-            res.status(200).json({
-                success: true,
-                service: data,
-            });
-        }
-        )
+            // if body has services_list and services_list has id then update services_list items for this service
+            // service list is an array of objects with name description and highlighted fields
+            if (typeof req.body.services_list !== "undefined" && req.body.services_list) {
+                // create temp_order variable inside services_list objects to save order of items
+                const services_list_all = req.body.services_list.map((item, index) => {
+                    item.temp_order = index;
+                    return item;
+                });
+
+                // create temp_order variable inside services_prices objects to save order of items
+                // services_prices is an array of arrays of objects with title, description, value and discount fields
+                const services_prices_all = req.body.services_prices.map((item, index) => {
+                    item.forEach((tempItem, tempIndex) => {
+                        tempItem.temp_order = tempIndex;
+                        tempItem.list_index = index;
+                    });
+                    return item;
+                });
+                // separate services_list and services_prices if they have id or not
+                const services_list_with_id = services_list_all.filter((item) => item.id);
+                const services_list_without_id = services_list_all.filter((item) => !item.id);
+                // services_prices_all is an array of arrays of objects with id, title, description, value and discount fields
+                // services_prices_with_id is an array of objects with id, title, description, value and discount fields
+                // services_prices_without_id is an array of arrays of objects with title, description, value and discount fields
+                // filter services_prices_all to get services_prices_with_id and services_prices_without_id by checking if objects inside array of arrays have id or not and then filter objects with id and without id
+                const services_prices_with_id = services_prices_all.map((item) => item.filter((tempItem) => typeof tempItem.id !== "undefined"));
+                const services_prices_without_id = services_prices_all.map((item) => item.filter((tempItem) => typeof tempItem.id === "undefined"));
+
+                console.log(services_list_with_id, 'services_list_with_id');
+                console.log(services_list_without_id, 'services_list_without_id');
+
+                console.log(services_prices_with_id, 'services_prices_with_id');
+                console.log(services_prices_without_id, 'services_prices_without_id');
+
+                // check if services_list_with_id contains all services_list items from database for this service and if not then soft delete them
+                prisma.services_list.findMany({
+                    where: {
+                        usluga_id: req.body.id,
+                        active: 1
+                    }
+                })
+                    .then((data) => {
+                        data.forEach((item) => {
+                            if (!services_list_with_id.some((sl) => sl.id === item.id)) {
+                                prisma.services_list.update({
+                                    where: {
+                                        id: item.id,
+                                    },
+                                    data: {
+                                        active: 0,
+                                        update_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                                        delete_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                                    }
+                                })
+                                    .then((data) => {
+                                        console.log(data, 'services_list item deleted');
+                                    })
+                                    .catch((error) => {
+                                        console.log(error, 'error services_list item');
+                                    })
+                            }
+                        });
+                    })
+                    .catch((error) => {
+                        console.log(error, 'error services_list item');
+                    });
+
+                // update services_list items with id
+                services_list_with_id.forEach((item, index) => {
+                    prisma.services_list.update({
+                        where: {
+                            id: item.id,
+                        },
+                        data: RemoveNullValues({
+                            name: item.name,
+                            description: item.description,
+                            highlighted: item.highlighted,
+                            services_order: item.temp_order,
+                            update_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                        })
+                    })
+                        .then((data) => {
+                            console.log(services_prices_with_id.find((prices) => prices.some(price => price.list_index === index)), 'services_prices_with_id 1');
+                            const tempServicesPricesWithId = services_prices_with_id.find((prices) => prices.some(price => price.list_index === index));
+                            // if services_prices exists then update services_prices items for this service
+                            // services_prices is an array of arrays of objects with title, description, value and discount fields
+                            if (typeof tempServicesPricesWithId !== "undefined" && tempServicesPricesWithId) {
+                                // check if services_prices_with_id contains all services_prices items from database for this service and if not then soft delete them
+                                prisma.services_price_list.findMany({
+                                    where: {
+                                        service_list_id: item.id,
+                                        active: 1
+                                    }
+                                })
+                                    .then((data) => {
+                                        data.forEach((tempItemPrice) => {
+                                            if (!tempServicesPricesWithId.some((sl) => sl.id === tempItemPrice.id)) {
+                                                prisma.services_price_list.update({
+                                                    where: {
+                                                        id: tempItemPrice.id,
+                                                    },
+                                                    data: {
+                                                        active: 0,
+                                                        update_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                                                        delete_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                                                    }
+                                                })
+                                                    .then((data) => {
+                                                        console.log(data, 'services_prices item deleted');
+                                                    })
+                                                    .catch((error) => {
+                                                        console.log(error, 'error services_prices item');
+                                                    })
+                                            }
+                                        });
+                                    })
+                                    .catch((error) => {
+                                        console.log(error, 'error services_prices item');
+                                    });
+
+                                // update services_prices items with id
+                                tempServicesPricesWithId.forEach((tempItemPrice) => {
+                                    prisma.services_price_list.update({
+                                        where: {
+                                            id: tempItemPrice.id,
+                                        },
+                                        data: RemoveNullValues({
+                                            title: tempItemPrice.title,
+                                            description: tempItemPrice.description,
+                                            value: parseFloat(tempItemPrice.value ? tempItemPrice.value : 0),
+                                            discount: parseFloat(tempItemPrice.discount ? tempItemPrice.discount : 0),
+                                            item_order: tempItemPrice.temp_order,
+                                            update_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                                        })
+                                    })
+                                        .then((data) => {
+                                            console.log(data, 'services_prices item updated');
+                                        })
+                                        .catch((error) => {
+                                            console.log(error, 'error services_prices item');
+                                        })
+                                });
+
+                            }
+
+                            // create services_prices items without id
+                            console.log(services_prices_without_id.find((prices) => prices.some(price => price.list_index === index)), 'services_prices_without_id');
+                            const tempServicesPricesWithoutId = services_prices_without_id.find((prices) => prices.some(price => price.list_index === index));
+                            if (typeof tempServicesPricesWithoutId !== "undefined" && tempServicesPricesWithoutId) {
+                                tempServicesPricesWithoutId.forEach((tempItemPrice) => {
+                                    prisma.services_price_list.create({
+                                        data: RemoveNullValues({
+                                            service_list_id: item.id,
+                                            title: tempItemPrice.title,
+                                            description: tempItemPrice.description,
+                                            value: parseFloat(tempItemPrice.value ? tempItemPrice.value : 0),
+                                            discount: parseFloat(tempItemPrice.discount ? tempItemPrice.discount : 0),
+                                            item_order: tempItemPrice.temp_order,
+                                            create_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                                        })
+                                    })
+                                        .then((data) => {
+                                            console.log(data, 'services_prices item created');
+                                        })
+                                        .catch((error) => {
+                                            console.log(error, 'error services_prices item');
+                                        })
+                                });
+                            }
+                        })
+                        .catch((error) => {
+                            console.log(error, 'error services_list item');
+                        })
+                });
+
+                // create services_list items without id
+                services_list_without_id.forEach((item, index) => {
+                    prisma.services_list.create({
+                        data: RemoveNullValues({
+                            usluga_id: req.body.id,
+                            name: item.name,
+                            description: item.description,
+                            highlighted: item.highlighted,
+                            services_order: item.temp_order,
+                            create_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                        })
+                    })
+                        .then((data) => {
+                            console.log(services_prices_without_id.find((prices) => prices.some(price => price.list_index === index)), 'tempServicesPricesWithoutId 2')
+                            // if services_prices exists then create services_prices items for this service
+                            // services_prices is an array of arrays of objects with title, description, value and discount fields
+                            const tempServicesPrices = services_prices_without_id.find((prices) => prices.some(price => price.list_index === index));
+                            if (typeof tempServicesPrices !== "undefined" && tempServicesPrices) {
+                                tempServicesPrices.forEach((tempItemPrice) => {
+                                    prisma.services_price_list.create({
+                                        data: RemoveNullValues({
+                                            service_list_id: data.id,
+                                            title: tempItemPrice.title,
+                                            description: tempItemPrice.description,
+                                            value: parseFloat(tempItemPrice.value ? tempItemPrice.value : 0),
+                                            discount: parseFloat(tempItemPrice.discount ? tempItemPrice.discount : 0),
+                                            item_order: tempItemPrice.temp_order,
+                                            create_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                                        })
+                                    })
+                                        .then((data) => {
+                                            console.log(data, 'services_prices item created');
+                                        })
+                                        .catch((error) => {
+                                            console.log(error, 'error services_prices item');
+                                        })
+                                });
+                            }
+                        })
+                        .catch((error) => {
+                            console.log(error, 'error services_list item');
+                        })
+                });
+
+                res.status(200).json({
+                    success: true,
+                    service: data,
+                });
+            }
+        })
         .catch((error) => {
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
                 // The .code property can be accessed in a type-safe manner
@@ -990,8 +1207,8 @@ app.put("/prisma/services/order", async (req, res) => {
 
 app.post("/prisma/subservices", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
-        const imageName =  await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
-        if(imageName) req.body.img_src = "/images/home/" + imageName;
+        const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
+        if (imageName) req.body.img_src = "/images/home/" + imageName;
     }
 
     const tempData = RemoveNullValues({
@@ -1042,8 +1259,8 @@ app.post("/prisma/subservices", async (req, res) => {
 
 app.put("/prisma/subservices", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
-        const imageName =  await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
-        if(imageName) req.body.img_src = "/images/home/" + imageName;
+        const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
+        if (imageName) req.body.img_src = "/images/home/" + imageName;
     }
 
     const tempData = RemoveNullValues({
