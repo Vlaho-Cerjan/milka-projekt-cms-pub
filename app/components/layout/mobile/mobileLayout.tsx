@@ -16,11 +16,32 @@ import { useRouter } from 'next/router';
 import ScrollProps from "../../../interfaces/ScrollProps";
 import { CustomThemeContext } from '../../../store/customThemeContext';
 import Footer from '../footer/footer';
+import { KeyboardArrowRight } from '@mui/icons-material';
 
 interface MobileLayoutProps {
     children: React.ReactNode,
     data: any
 }
+
+const StyledLink = styled(Link)(({ theme }) => ({
+    padding: "4px 12px",
+    margin: "4px 0",
+    width: "100%",
+    textAlign: "start",
+    fontWeight: 600,
+    fontSize: "1.2rem",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    '&:hover': { backgroundColor: theme.palette.action.hover, borderRadius: "5px" },
+    '&.active': {
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText,
+        borderRadius: "5px",
+
+        '&:hover': { backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }
+    }
+}))
 
 const MobileLayout = ({ children, data }: MobileLayoutProps) => {
     const [state, setState] = React.useState({
@@ -282,93 +303,131 @@ const MobileLayout = ({ children, data }: MobileLayoutProps) => {
                             </Box>
                         </Grid>
                         <Grid item xs={12} sx={{ width: "100%" }}>
-                            {typeof data !== "undefined" && data && data.navigation ?
-                                <Box textAlign="center" sx={{ display: "flex", flexDirection: "column", fontSize: "1.5rem", fontWeight: 600, width: "100%" }}>
-                                    {data.navigation.filter((item: any) => item.parent_id === null).map((navItem: any) => (
-                                        navItem.type === "link" ?
-                                            <Link key={"mobileNavLink_+" + navItem.id} onClick={toggleDrawer(false)} sx={{ p: "8px 0" }} href={typeof navItem.href !== "undefined" && navItem.href ? navItem.href : "#"}>{navItem.name}</Link>
-
-                                            : navItem.type === "button" ?
-                                                <Button
-                                                    key={"mobileNavButton_" + navItem.id}
-                                                    id={"mobileNavItem_" + navItem.id}
-                                                    aria-controls={(anchorItemEl && anchorItemEl["mobileNavItem_" + navItem.id]) ? 'basic-menu' : undefined}
-                                                    aria-haspopup="true"
-                                                    aria-expanded={(anchorItemEl && anchorItemEl["mobileNavItem_" + navItem.id]) ? 'true' : undefined}
-                                                    onClick={handleItemClick}
-                                                    sx={{
-                                                        textTransform: "none",
-                                                        textDecoration: "underline",
-                                                        textDecorationColor: "rgba(144, 202, 249, 0.4)",
-                                                        fontSize: "1.5rem",
-                                                        fontWeight: "600",
-                                                        lineHeight: "1.2",
-                                                        marginRight: "2px",
-                                                        letterSpacing: "0.00938em",
-                                                        borderRadius: 0,
-                                                        p: "8px 0"
-                                                    }}
-                                                    endIcon={<KeyboardArrowDownIcon sx={{ fontSize: "18px !important", }} />}
-                                                >
-                                                    {navItem.name}
-                                                </Button>
-                                                :
-                                                null
-                                    ))}
-                                    {
-                                        data.navigation.filter((navItem: any) => navItem.type === "button").map((navItem: any) => (
-                                            <Menu
-                                                key={"mobileNavMenu_" + navItem.id}
-                                                id={"mobileNavMenu_" + navItem.id}
-                                                anchorEl={(anchorItemEl) ? anchorItemEl["mobileNavItem_" + navItem.id] : null}
-                                                open={(anchorItemEl && anchorItemEl["mobileNavItem_" + navItem.id]) ? true : false}
-                                                onClose={handleItemClose}
-                                                MenuListProps={{
-                                                    'aria-labelledby': 'navItem_' + navItem.id,
-                                                }}
-                                                PaperProps={{
-                                                    sx: { minWidth: "100%", left: "0 !important", 'a': { fontWeight: 600 } }
-                                                }}
-                                            >
-                                                {data.navigation.filter((itemChild: any) => itemChild.parent_id === navItem.id).map((navItemChild: any) => (
-                                                    navItemChild.type === "link" ?
-                                                        <MenuItem key={navItemChild.id} sx={{ fontSize: "1.5rem", justifyContent: "center" }} onClick={handleItemClose}>
-                                                            <Link onClick={toggleDrawer(false)} sx={{ display: "block", '&:hover': { backgroundColor: 'transparent', } }} href={typeof navItemChild.href !== "undefined" && navItemChild.href ? navItemChild.href : "#"}>{navItemChild.name}</Link>
-                                                        </MenuItem>
-                                                        : navItemChild.type === "button" ?
-                                                            <MenuItem key={navItemChild.id} sx={{ fontSize: "1.5rem", justifyContent: "center" }} onClick={handleItemClose}>
-                                                                <Button
-                                                                    id={"mobileNavItem_" + navItemChild.id}
-                                                                    aria-controls={(anchorItemEl && anchorItemEl["mobileNavItem_" + navItemChild.id]) ? 'basic-menu' : undefined}
-                                                                    aria-haspopup="true"
-                                                                    aria-expanded={(anchorItemEl && anchorItemEl["mobileNavItem_" + navItemChild.id]) ? 'true' : undefined}
-                                                                    onClick={handleItemClick}
-                                                                    sx={{
-                                                                        textTransform: "none",
-                                                                        textDecoration: "underline",
-                                                                        textDecorationColor: "rgba(144, 202, 249, 0.4)",
-                                                                        fontSize: "1.5rem",
-                                                                        fontWeight: "600",
-                                                                        lineHeight: "1.2",
-                                                                        marginRight: "2px",
-                                                                        letterSpacing: "0.00938em",
-                                                                        borderRadius: 0,
-                                                                        p: "8px 0"
-                                                                    }}
-                                                                    endIcon={<KeyboardArrowDownIcon sx={{ fontSize: "18px !important", }} />}
-                                                                >
-                                                                    {navItem.name}
-                                                                </Button>
-                                                            </MenuItem>
-                                                            :
-                                                            null
-                                                ))}
-                                            </Menu>
-                                        ))
-                                    }
-                                </Box>
-                                : null
-                            }
+                            <Box
+                                textAlign="center"
+                                component={"nav"}
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <StyledLink
+                                    className={(router.pathname.includes("/pages")) ? "active" : undefined}
+                                    href={"/pages"}
+                                    key={"navLink_pages"}
+                                    onClick={(e) => {
+                                        if (router.pathname === "/pages") e.preventDefault();
+                                    }}
+                                >
+                                    Stranice
+                                    <KeyboardArrowRight />
+                                </StyledLink>
+                                <StyledLink
+                                    className={(router.pathname.includes("/company_info")) ? "active" : undefined}
+                                    href={"/company_info"}
+                                    key={"navLink_company_info"}
+                                    onClick={(e) => {
+                                        if (router.pathname === "/company_info") e.preventDefault();
+                                    }}
+                                >
+                                    Info o Firmi
+                                    <KeyboardArrowRight />
+                                </StyledLink>
+                                <StyledLink
+                                    className={(router.pathname.includes("/navigation")) ? "active" : undefined}
+                                    href={"/navigation"}
+                                    key={"navLink_navigation"}
+                                    onClick={(e) => {
+                                        if (router.pathname === "/navigation") e.preventDefault();
+                                    }}
+                                >
+                                    Navigacija
+                                    <KeyboardArrowRight />
+                                </StyledLink>
+                                <StyledLink
+                                    className={(router.pathname.includes("/socials")) ? "active" : undefined}
+                                    href={"/socials"}
+                                    key={"navLink_socials"}
+                                    onClick={(e) => {
+                                        if (router.pathname === "/socials") e.preventDefault();
+                                    }}
+                                >
+                                    Društvene Mreže
+                                    <KeyboardArrowRight />
+                                </StyledLink>
+                                <StyledLink
+                                    className={(router.pathname.includes("/services")) ? "active" : undefined}
+                                    href={"/services"}
+                                    key={"navLink_services"}
+                                    onClick={(e) => {
+                                        if (router.pathname === "/services") e.preventDefault();
+                                    }}
+                                >
+                                    Usluge
+                                    <KeyboardArrowRight />
+                                </StyledLink>
+                                <StyledLink
+                                    className={(router.pathname.includes("/doctors")) ? "active" : undefined}
+                                    href={"/doctors"}
+                                    key={"navLink_doctors"}
+                                    onClick={(e) => {
+                                        if (router.pathname === "/doctors") e.preventDefault();
+                                    }}
+                                >
+                                    Doktori
+                                    <KeyboardArrowRight />
+                                </StyledLink>
+                                <StyledLink
+                                    className={(router.pathname.includes("/employees")) ? "active" : undefined}
+                                    href={"/employees"}
+                                    key={"navLink_employees"}
+                                    onClick={(e) => {
+                                        if (router.pathname === "/employees") e.preventDefault();
+                                    }}
+                                >
+                                    Zaposlenici
+                                    <KeyboardArrowRight />
+                                </StyledLink>
+                                {/*
+                    <StyledLink
+                        className={(router.pathname.includes("/categories")) ? "active" : undefined}
+                        href={"/categories"}
+                        key={"navLink_categories"}
+                        onClick={(e) => {
+                            if(router.pathname === "/categories") e.preventDefault();
+                        }}
+                    >
+                        Kategorije
+                        <KeyboardArrowRight />
+                    </StyledLink>
+                    */}
+                                <StyledLink
+                                    className={(router.pathname.includes("/faq")) ? "active" : undefined}
+                                    href={"/faq"}
+                                    key={"navLink_faq"}
+                                    onClick={(e) => {
+                                        if (router.pathname === "/faq") e.preventDefault();
+                                    }}
+                                >
+                                    FAQ
+                                    <KeyboardArrowRight />
+                                </StyledLink>
+                                {/*
+                    <StyledLink
+                        className={(router.pathname.includes("/tags")) ? "active" : undefined}
+                        href={"/tags"}
+                        key={"navLink_tags"}
+                        onClick={(e) => {
+                            if(router.pathname === "/tags") e.preventDefault();
+                        }}
+                    >
+                        Oznake
+                        <KeyboardArrowRight />
+                    </StyledLink>
+                    */}
+                            </Box>
                         </Grid>
                     </Grid>
                 </Paper>

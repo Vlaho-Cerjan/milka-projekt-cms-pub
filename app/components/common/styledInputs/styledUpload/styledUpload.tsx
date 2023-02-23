@@ -260,9 +260,7 @@ const StyledUpload = ({ file, aspectRatio, setFile, type, noPreview, resizeSizes
                             <Image
                                 src={file}
                                 alt="background image"
-                                layout="fill"
-                                objectFit="contain"
-                                objectPosition={"center"}
+                                fill
                             />
                         </StyledUploadImageFrame>
                         :

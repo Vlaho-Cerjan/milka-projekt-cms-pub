@@ -7,7 +7,7 @@ import { StyledContainer } from '../common/container/styledContainer';
 import Title from '../common/title/title';
 
 interface OurTeamProps {
-    employes: {
+    employees: {
         id: number,
         first_name: string,
         aditional_names: string | null,
@@ -45,11 +45,11 @@ const StyledCardContent = styled(CardContent)(() => ({
     justifyContent: "space-between"
 }))
 
-const OurTeam = ({employes}: OurTeamProps) => {
+const OurTeam = ({employees}: OurTeamProps) => {
     const { theme } = useContext(CustomThemeContext);
 
     const dataEmployes = (
-        employes.map(employe => {
+        employees.map(employe => {
             return(
                 <Grid key={'employe_'+employe.id} item xs={12} sm={6} md={4} lg={3}>
                     <StyledCard

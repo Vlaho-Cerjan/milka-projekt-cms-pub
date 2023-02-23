@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { doctors, PrismaClient, services, services_list, services_price_list, subservices } from '@prisma/client';
 import { StyledContainer } from '../../app/components/common/container/styledContainer';
 import {
     Box,
@@ -10,8 +10,8 @@ import {
     FormControl,
     MenuItem,
     Select,
-    Checkbox,
     styled,
+    Checkbox,
 } from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
 import { KeyboardArrowLeft } from '@mui/icons-material';
@@ -21,18 +21,14 @@ import StyledInput from '../../app/components/common/styledInputs/styledInput';
 import { useSnackbar } from 'notistack';
 import { useRouter } from 'next/router';
 import { CustomThemeContext } from '../../app/store/customThemeContext';
+import StyledUpload from '../../app/components/common/styledInputs/styledUpload/styledUpload';
 import { UploadFileContainer } from '../../app/components/common/styledInputs/styledUploadFormContainer/styledUploadFormContainer';
 import { UploadFileFormLabel } from '../../app/components/common/styledInputs/styledUploadFormLabel/styledUploadFormLabel';
-import StyledUpload from '../../app/components/common/styledInputs/styledUpload/styledUpload';
-import { InferGetStaticPropsType } from "next";
-import ServicesPrices from '../../app/components/servicePage/servicesPrices';
+import StyledSearchAutoComplete from '../../app/components/common/styledInputs/styledSearchAutocomplete/styledSearchAutocomplete';
 import ServicesList from '../../app/components/servicePage/servicesList';
+import { InferGetStaticPropsType } from 'next';
 
-const StyledFormControl = styled(FormControl)(() => ({
-    borderRadius: "12px"
-}));
-
-export const getStaticProps = async () => {
+export const getStaticProps = async ({ params }: { params: { subserviceHref: string } }) => {
     const prisma = new PrismaClient();
 
     const services = await prisma.services.findMany({
@@ -41,34 +37,77 @@ export const getStaticProps = async () => {
         }
     });
 
-    const db_doctors = await prisma.doctors.findMany({
+    const subservice = await prisma.subservices.findFirst({
         where: {
+            slug: params.subserviceHref === "naslovna" ? "/" : "/" + params.subserviceHref,
             active: 1
         }
     });
 
+    const service_list = await prisma.services_list.findMany({
+        where: {
+            pod_usluga_id: subservice?.id
+        }
+    });
+
+    const service_price_list = await prisma.services_price_list.findMany({
+        where: {
+            service_list_id: {
+                in: service_list.map((subservice) => subservice.id)
+            }
+        }
+    });
+
+    const db_doctors = await prisma.doctors.findMany();
+
     return {
         props: {
             services,
-            db_doctors
+            subservice,
+            db_doctors,
+            service_list,
+            service_price_list
         },
     };
 
 }
 
+export const getStaticPaths = async () => {
+    const prisma = new PrismaClient();
 
-const CreateSubservicePage = ({ services, db_doctors }: InferGetStaticPropsType<typeof getStaticProps>) => {
+    const subservices = await prisma.subservices.findMany();
+
+    const getLastWord = (str: string) => {
+        const last = str.trim().split("/").pop();
+        if (last) {
+            return last;
+        }
+        return "";
+    }
+
+    const paths = subservices.map((subservice) => ({
+        params: { subserviceHref: subservice.slug === "/" ? "naslovna" : subservice.slug ? getLastWord(subservice.slug) : "" },
+    }));
+
+    return { paths, fallback: false };
+}
+
+const StyledFormControl = styled(FormControl)(() => ({
+    borderRadius: "12px"
+}));
+
+const NavPage = ({ services, subservice, db_doctors, service_list, service_price_list }: InferGetStaticPropsType<typeof getStaticProps>) => {
     const router = useRouter();
     const { isDark, theme } = React.useContext(CustomThemeContext);
     const { enqueueSnackbar } = useSnackbar();
     const [name, setName] = React.useState("");
     const [description, setDescription] = React.useState("");
+    const [serviceId, setServiceId] = React.useState<number | null>(null);
     const [doctors, setDoctors] = React.useState<number[]>([]);
     const [active, setActive] = React.useState(1);
     const [image, setImage] = React.useState("");
     const [slug, setSlug] = React.useState("");
     const [alt, setAlt] = React.useState("");
-    const [serviceId, setServiceId] = React.useState(-1);
     const [servicesList, setServicesList] = React.useState<{
         id?: number;
         name: string;
@@ -85,22 +124,70 @@ const CreateSubservicePage = ({ services, db_doctors }: InferGetStaticPropsType<
         }[][]
     >([]);
 
+    React.useEffect(() => {
+        if (subservice) {
+            const doctors = subservice.doctors_id ? subservice.doctors_id.split(",").map((id) => parseInt(id)) : [];
+            setName(subservice.name);
+            setDescription(subservice.description ? subservice.description : "");
+            setDoctors(doctors);
+            setServiceId(subservice.usluga_id);
+            setActive(subservice.active);
+            setImage(subservice.img_src ? subservice.img_src : "");
+            setSlug(subservice.slug ? subservice.slug : "");
+            setAlt(subservice.alt ? subservice.alt : "");
+        }
+        console.log(subservice, "subservice")
+    }, [subservice]);
+
+    React.useEffect(() => {
+        if (service_list) {
+            const servicesList = service_list.map((tempService) => ({
+                id: tempService.id ? tempService.id : undefined,
+                name: tempService.name,
+                description: tempService.description ? tempService.description : "",
+                highlighted: tempService.highlighted
+            }));
+            //console.log(servicesList, "servicesList");
+            setServicesList(servicesList);
+
+            if (service_price_list) {
+                const servicePrices = servicesList.map((tempService) => {
+                    const servicePrices = service_price_list.filter((servicePrice) => servicePrice.service_list_id === tempService.id);
+                    return servicePrices.map((servicePrice) => ({
+                        id: servicePrice.id ? servicePrice.id : undefined,
+                        title: servicePrice.title ? servicePrice.title : "",
+                        description: servicePrice.description ? servicePrice.description : "",
+                        value: servicePrice.value,
+                        discount: servicePrice.discount ? servicePrice.discount : 0
+                    }));
+                });
+                //console.log(servicePrices, "servicePrices");
+                setServicePrices(servicePrices);
+            }
+        }
+    }, []);
+
+    React.useEffect(() => {
+        console.log(servicesList, "servicesList");
+        console.log(servicePrices, "servicePrices");
+    }, [servicesList, servicePrices]);
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        fetch(process.env.NEXT_PUBLIC_API_URL + 'subservices', {
-            method: 'POST',
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'services', {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+                id: subservice?.id,
                 name: name,
                 description: description,
-                usluga_id: serviceId,
-                doctors_id: doctors,
+                // string of doctors ids
+                doctors_id: doctors.join(","),
                 img_src: image,
-                // check if slug has / in the first character and put it if it doesn't
-                slug: slug.charAt(0) === "/" ? slug : "/" + slug,
+                slug: slug,
                 alt: alt,
                 active: active,
                 services_list: servicesList,
@@ -109,7 +196,7 @@ const CreateSubservicePage = ({ services, db_doctors }: InferGetStaticPropsType<
         })
             .then(res => {
                 if (res.status === 200) {
-                    enqueueSnackbar("Uspješno ste stvorili poduslugu", { variant: "success" });
+                    enqueueSnackbar("Uspješno ste stvorili uslugu", { variant: "success" });
                     router.back();
                 } else if (res.status === 400) {
                     enqueueSnackbar("Greška prilikom stvaranja", { variant: "error" });
@@ -126,15 +213,15 @@ const CreateSubservicePage = ({ services, db_doctors }: InferGetStaticPropsType<
         <StyledContainer>
             <SEO page_info={
                 {
-                    page_slug: "/subservices/create",
-                    page_title: "Stranice | Stvori Novu Poduslugu",
-                    page_description: "Stranice | Stvori Novu Poduslugu",
+                    page_slug: "/services/" + subservice?.id,
+                    page_title: "Stranice | " + subservice?.name,
+                    page_description: "Stranice | " + subservice?.name,
                     image: "",
                     openGraphType: "website"
                 }
             } />
             <Typography component="h1" variant="h4" sx={{ mb: "32px" }}>
-                Stvori Novu Poduslugu
+                {subservice?.name ? subservice?.name : "Usluga"}
             </Typography>
             <Paper
                 component={"form"}
@@ -207,7 +294,7 @@ const CreateSubservicePage = ({ services, db_doctors }: InferGetStaticPropsType<
                             {StyledLabel("Slug")}
                             <StyledInput
                                 inputVal={slug}
-                                inputPlaceholder={"Unesi slug/href (npr. 'ime-podusluge')"}
+                                inputPlaceholder={"Unesi slug/href (npr. 'ime-usluge')"}
                                 inputChangeFunction={setSlug}
                                 required
                             />
@@ -239,7 +326,7 @@ const CreateSubservicePage = ({ services, db_doctors }: InferGetStaticPropsType<
                             </StyledFormControl>
                         </Grid>
                         <Grid item xs={12} sm={6} md={4} lg={4}>
-                            {StyledLabel("Roditeljska Usluga")}
+                            {StyledLabel("Roditeljska usluga")}
                             <StyledFormControl fullWidth>
                                 <Select
                                     required
@@ -264,7 +351,7 @@ const CreateSubservicePage = ({ services, db_doctors }: InferGetStaticPropsType<
                                 >
                                     {services.map((service) => (
                                         <MenuItem sx={{ display: "flex", alignItems: "center" }} key={service.id} value={service.id}>
-                                            <Checkbox sx={{ padding: "0 4px 0 0" }} checked={serviceId === service.id} />
+                                            <Checkbox sx={{ padding: "0 4px 0 0" }} checked={service.id === serviceId} />
                                             {service.name}
                                         </MenuItem>
                                     ))}
@@ -340,4 +427,4 @@ const CreateSubservicePage = ({ services, db_doctors }: InferGetStaticPropsType<
     )
 }
 
-export default CreateSubservicePage;
+export default NavPage;

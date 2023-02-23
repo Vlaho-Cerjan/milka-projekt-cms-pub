@@ -42,6 +42,11 @@ const Pages = ({ page_info }: { page_info: page_info[] }) => {
         }
     }, [page_info]);
 
+    const getLastWordFromHref = (href: string) => {
+        const hrefArray = href.split('/');
+        return hrefArray[hrefArray.length - 1];
+    }
+
     return (
         <StyledContainer>
             <SEO page_info={
@@ -62,7 +67,7 @@ const Pages = ({ page_info }: { page_info: page_info[] }) => {
                         {pages ? pages.map((page) => (
                             <Grid sx={{ borderRadius: "12px", }} item xs={12} sm={6} md={4} key={page.id}>
                                 <Card sx={{ borderRadius: "12px", height: "100%", position: "relative" }}>
-                                    <CardActionArea sx={{ height: "100%" }} href={'/pages' + (page.page_slug === "/" ? "/naslovna" : page.page_slug)}>
+                                    <CardActionArea sx={{ height: "100%" }} href={'/pages' + (page.page_slug === "/" ? "/naslovna" : "/" + getLastWordFromHref(page.page_slug))}>
                                         {page.image ?
                                             <CardMedia
                                                 component="img"

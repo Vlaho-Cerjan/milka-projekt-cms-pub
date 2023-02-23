@@ -14,6 +14,7 @@ import { useSnackbar } from 'notistack';
 import { useRouter } from 'next/router';
 import { CustomThemeContext } from '../../app/store/customThemeContext';
 import { InferGetStaticPropsType } from "next";
+import { getLastWordFromHref } from '../../app/utility/getLastWordFromHref';
 
 export const getStaticProps = async ({ params }: { params: { pageId: string } }) => {
     const prisma = new PrismaClient();
@@ -21,9 +22,9 @@ export const getStaticProps = async ({ params }: { params: { pageId: string } })
     // get pages from database, replace "-" with "/" and replace "naslovna" with "/"
     const page = await prisma.page_info.findFirst({
         where: {
-            page_slug: {
-                equals: (params.pageId === "naslovna" ? "/" : "/" + params.pageId.replace(/-/g, "/"))
-            },
+            page_slug: params.pageId === "naslovna" ? "/" : {
+                contains: params.pageId,
+            }
         }
     });
 
@@ -49,9 +50,11 @@ export const getStaticPaths = async () => {
     // set paths for static pages from database,replace "/" with "naslovna", else remove first "/" from page_slug and replace other "/" with "-"
     const paths = page_info.map((page) => ({
         params: {
-            pageId: (page.page_slug === "/" ? "naslovna" : page.page_slug.replace("/", "").replace(/\//g, "-"))
+            pageId: (page.page_slug === "/" ? "naslovna" : getLastWordFromHref(page.page_slug))
         },
     }));
+
+    console.log(paths)
 
     return { paths, fallback: false };
 }

@@ -1,7 +1,10 @@
 {
     "workbench.colorCustomizations": {
         "editor.lineHighlightBackground": "#1073cf2d",
-        "editor.lineHighlightBorder": "#9fced11f"
+        "editor.lineHighlightBorder": "#9fced11f",
+        "tab.activeBorder": "#2299B6",
+        "statusBar.background": "#2299B6",
+        "statusBar.foreground": "#ffffff"
     },
     "WillLuke.nextjs.addTypesOnSave": true,
     "WillLuke.nextjs.hasPrompted": true

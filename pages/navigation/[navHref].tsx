@@ -16,9 +16,12 @@ export const getStaticProps = async ({ params }: { params: { navHref: string } }
 
     const navs = await prisma.navigation.findMany();
 
+    // check if the navHref is "naslovna" and if it is, set it to "/" and if it's not check if navHref is contained in the href
     const nav = await prisma.navigation.findFirst({
         where: {
-            href: params.navHref === "naslovna" ? "/" : "/" + params.navHref
+            href: params.navHref === "naslovna" ? "/" : {
+                contains: params.navHref
+            }
         }
     });
 

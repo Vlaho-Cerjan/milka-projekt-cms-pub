@@ -83,7 +83,7 @@ CREATE TABLE `doctors` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `employes` (
+CREATE TABLE `employees` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `first_name` VARCHAR(255) NOT NULL,
     `aditional_names` VARCHAR(255) NULL,

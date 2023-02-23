@@ -18,12 +18,17 @@ export function SortableItem({ navigation }: { navigation: navigation }) {
         transition,
     };
 
+    const getLastWordFromHref = (href: string) => {
+        const words = href.split("/");
+        return words[words.length - 1];
+    }
+
     return (
         <Grid sx={{ borderRadius: "12px" }} ref={setNodeRef} style={style} {...attributes} item xs={12} sm={6} md={4} id={navigation.id.toString()} key={navigation.id}>
             <Card sx={{ borderRadius: "12px", height: "100%", position: "relative", opacity: navigation.active === 0 ? 0.5 : 1 }}>
                 <CardActionArea
                     sx={{ height: "100%" }}
-                    href={'/navigation' + (navigation.href === "/" ? "/naslovna" : (navigation.href.includes("#")) ? "/" + navigation.name.toLowerCase().replaceAll(" ", "_") : navigation.href)}
+                    href={'/navigation' + (navigation.href === "/" ? "/naslovna" : (navigation.href.includes("#")) ? "/" + getLastWordFromHref(navigation.name.toLowerCase().replaceAll(" ", "_")) : "/" + getLastWordFromHref(navigation.href))}
                 >
                     <CardContent>
                         <Typography gutterBottom variant="h5" component="div">

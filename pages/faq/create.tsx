@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { navigation } from '../../app/interfaces/navigation';
 import { StyledContainer } from '../../app/components/common/container/styledContainer';
-import { Box, Typography, Button, Paper, Divider, Grid, FormControl, MenuItem, Select, styled, SelectChangeEvent } from '@mui/material';
+import { Box, Typography, Button, Paper, Divider, Grid } from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
 import { KeyboardArrowLeft } from '@mui/icons-material';
 import React from 'react';
@@ -10,51 +8,30 @@ import StyledInput from '../../app/components/common/styledInputs/styledInput';
 import { useSnackbar } from 'notistack';
 import { useRouter } from 'next/router';
 import { CustomThemeContext } from '../../app/store/customThemeContext';
-import { social } from '../../app/interfaces/socials';
-import { socialTypes } from '../../app/store/socials';
 
-export const getStaticProps = async () => {
-    const prisma = new PrismaClient();
-
-    const socs = await prisma.socials.findMany();
-
-    return {
-        props: {
-            socs
-        },
-    };
-
-}
-
-const CreateNavPage = ({ socs }: { socs: social[] }) => {
+const CreateFaqPage = () => {
     const router = useRouter();
     const { isDark, theme } = React.useContext(CustomThemeContext);
     const { enqueueSnackbar } = useSnackbar();
-    const [name, setName] = React.useState("");
-    const [href, setHref] = React.useState("");
-    const [type, setType] = React.useState("");
-
-    const handleTypeChange = (e: SelectChangeEvent<string>) => {
-        setType(e.target.value);
-    }
+    const [title, setTitle] = React.useState("");
+    const [content, setContent] = React.useState("");
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        fetch(process.env.NEXT_PUBLIC_API_URL + 'socials', {
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'faq', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                name: name,
-                href: href,
-                type: type,
+                title: title,
+                content: content,
             })
         })
             .then(res => {
                 if (res.status === 200) {
-                    enqueueSnackbar("Uspješno ste stvorili društvenu mrežu", { variant: "success" });
+                    enqueueSnackbar("Uspješno ste stvorili faq", { variant: "success" });
                     router.back();
                 } else if (res.status === 400) {
                     enqueueSnackbar("Greška prilikom stvaranja", { variant: "error" });
@@ -71,15 +48,15 @@ const CreateNavPage = ({ socs }: { socs: social[] }) => {
         <StyledContainer>
             <SEO page_info={
                 {
-                    page_slug: "/socials/create",
-                    page_title: "Stranice | Stvori Novu Društvenu Mrežu",
-                    page_description: "Stranice | Stvori Društvenu Mrežu",
+                    page_slug: "/faq/create",
+                    page_title: "Stranice | Stvori Novo Pitanje",
+                    page_description: "Stranice | Stvori Novo Pitanje",
                     image: "",
                     openGraphType: "website"
                 }
             } />
             <Typography component="h1" variant="h4" sx={{ mb: "32px" }}>
-                Stvori Novu Društvenu Mrežu
+                Stvori Novo Pitanje
             </Typography>
             <Paper
                 component={"form"}
@@ -108,7 +85,7 @@ const CreateNavPage = ({ socs }: { socs: social[] }) => {
                                 }
                             }}
                             variant="contained"
-                            href="/socials"
+                            href="/faq"
                         >
                             <KeyboardArrowLeft sx={{ fontSize: "24px" }} /> Nazad
                         </Button>
@@ -128,54 +105,31 @@ const CreateNavPage = ({ socs }: { socs: social[] }) => {
                     }}
                 >
                     <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6} md={4}>
+                        <Grid item xs={12} sm={6} md={5}>
                             {StyledLabel("Naslov")}
                             <StyledInput
+                                multiline
+                                rows={4}
                                 required
-                                inputVal={name}
-                                inputPlaceholder={"Unesi Ime"}
+                                inputVal={title}
+                                inputPlaceholder={"Unesi Naslov"}
                                 inputChangeFunction={(value) => {
-                                    setName(value);
+                                    setTitle(value);
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Slug (Href)")}
+                        <Grid item xs={12} sm={6} md={7}>
+                            {StyledLabel("Sadržaj")}
                             <StyledInput
+                                multiline
+                                rows={4}
                                 required
-                                inputVal={href}
-                                inputPlaceholder={"Unesi Slug"}
+                                inputVal={content}
+                                inputPlaceholder={"Unesi Sadžaj"}
                                 inputChangeFunction={(value) => {
-                                    setHref(value);
+                                    setContent(value);
                                 }}
                             />
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
-                            {StyledLabel("Tip")}
-                            <Select
-                                required
-                                aria-required={true}
-                                value={type}
-                                onChange={handleTypeChange}
-                                sx={{
-                                    width: "100%",
-                                    fontSize: "14px",
-
-                                    '& fieldset': {
-                                        borderRadius: "12px",
-                                        borderWidth: "2px",
-                                    },
-
-                                    '& .MuiSelect-select': {
-                                        fontSize: "1em",
-                                        fontWeight: 500,
-                                    },
-                                }}
-                            >
-                                {socialTypes.map((type, index) => (
-                                    <MenuItem key={index} value={type.id}>{type.name}</MenuItem>
-                                ))}
-                            </Select>
                         </Grid>
                     </Grid>
                 </Box>
@@ -184,4 +138,4 @@ const CreateNavPage = ({ socs }: { socs: social[] }) => {
     )
 }
 
-export default CreateNavPage;
+export default CreateFaqPage;

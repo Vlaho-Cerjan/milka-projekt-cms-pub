@@ -199,6 +199,7 @@ const DesktopLayout = ({ children, data }: DesktopLayoutProps) => {
                         Zaposlenici
                         <KeyboardArrowRight />
                     </StyledLink>
+                    {/*
                     <StyledLink
                         className={(router.pathname.includes("/categories")) ? "active" : undefined}
                         href={"/categories"}
@@ -210,6 +211,7 @@ const DesktopLayout = ({ children, data }: DesktopLayoutProps) => {
                         Kategorije
                         <KeyboardArrowRight />
                     </StyledLink>
+                    */}
                     <StyledLink
                         className={(router.pathname.includes("/faq")) ? "active" : undefined}
                         href={"/faq"}
@@ -221,6 +223,7 @@ const DesktopLayout = ({ children, data }: DesktopLayoutProps) => {
                         FAQ
                         <KeyboardArrowRight />
                     </StyledLink>
+                    {/*
                     <StyledLink
                         className={(router.pathname.includes("/tags")) ? "active" : undefined}
                         href={"/tags"}
@@ -232,6 +235,7 @@ const DesktopLayout = ({ children, data }: DesktopLayoutProps) => {
                         Oznake
                         <KeyboardArrowRight />
                     </StyledLink>
+                    */}
                 </Box>
             </Paper>
             <Paper

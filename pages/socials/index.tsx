@@ -3,7 +3,7 @@ import { social } from '../../app/interfaces/socials';
 import { StyledContainer } from '../../app/components/common/container/styledContainer';
 import { Box, Typography, Button, Paper, Divider, Grid, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
-import { EditOutlined, KeyboardArrowLeft, DeleteOutlineOutlined, SaveOutlined } from '@mui/icons-material';
+import { EditOutlined, KeyboardArrowLeft, DeleteOutlineOutlined, SaveOutlined, CancelOutlined } from '@mui/icons-material';
 import React from 'react';
 import { StyledLabel } from '../../app/components/common/styledInputs/styledLabel/styledLabel';
 import StyledInput from '../../app/components/common/styledInputs/styledInput';
@@ -75,7 +75,7 @@ const Socials = ({ socialsArray }: { socialsArray: social[] }) => {
             })
         })
             .then((res) => {
-                if(res.ok){
+                if (res.ok) {
                     enqueueSnackbar('Uspješno ste izbrisali društvenu mrežu!', { variant: 'success' });
                     setItems(items.filter((item) => item.id !== id));
                 }
@@ -263,6 +263,27 @@ const Socials = ({ socialsArray }: { socialsArray: social[] }) => {
                                 <Box sx={{ textAlign: "right" }}>
                                     {StyledLabel("Akcije")}
                                     <Box sx={{ display: "flex", alignItems: "center" }}>
+                                        {!social.locked ?
+                                            <Button
+                                                variant='contained'
+                                                sx={{ minWidth: 0, padding: "14px", mr: "12px" }}
+                                                color='error'
+                                                onClick={() => {
+                                                    // lock social
+                                                    setItems(items.map((item) => {
+                                                        if (item.id === social.id) {
+                                                            return {
+                                                                ...item,
+                                                                locked: true
+                                                            }
+                                                        }
+                                                        return item;
+                                                    }));
+                                                }}
+                                            >
+                                                <CancelOutlined />
+                                            </Button>
+                                            : null}
                                         <Button onClick={() => {
                                             if (social.locked) {
                                                 unlockItem(social.id);
