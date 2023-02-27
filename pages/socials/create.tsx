@@ -45,7 +45,8 @@ const CreateNavPage = ({ socs }: { socs: social[] }) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Origin': process.env.NEXT_PUBLIC_API_URL? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3000'
+                'Access-Control-Allow-Origin': '*',
+                'Origin': process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3000'
             },
             body: JSON.stringify({
                 name: name,
