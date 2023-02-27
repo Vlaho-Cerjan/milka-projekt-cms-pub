@@ -23,10 +23,10 @@ export default withPlaiceholder(
       styledComponents: true,
     },
     async headers() {
-      // set headers for all paths
+      // set headers for all routes
       return [
         {
-          source: "/(.*)",
+          source: '/:path*', // matches all routes
           headers: [
             {
               key: "Access-Control-Allow-Credentials",
