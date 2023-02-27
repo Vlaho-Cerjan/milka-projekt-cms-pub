@@ -44,6 +44,9 @@ app.use(express.json({
     limit: '50mb'
 }));
 
+// add preflight OPTIONS request for all routes
+app.options('*', cors(corsOptions));
+
 // Page Info Routes
 
 app.post("/prisma/page_info", async (req, res) => {
