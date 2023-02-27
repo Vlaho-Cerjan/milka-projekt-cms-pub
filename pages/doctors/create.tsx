@@ -53,11 +53,7 @@ const CreateDoctorPage = ({ doctors }: { doctors: doctors[] }) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-                'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-                'Access-Control-Allow-Credentials': 'true',
-            },
+                },
             body: JSON.stringify({
                 first_name,
                 aditional_names,
