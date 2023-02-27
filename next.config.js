@@ -23,10 +23,10 @@ export default withPlaiceholder(
       styledComponents: true,
     },
     async headers() {
-      // set headers for all external api calls
+      // set headers for all paths
       return [
         {
-          source: "/:path*",
+          source: "/(.*)",
           headers: [
             {
               key: "Access-Control-Allow-Credentials",
