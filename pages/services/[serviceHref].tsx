@@ -169,7 +169,9 @@ const NavPage = ({ service, db_doctors, service_list, service_price_list }: Infe
         fetch(process.env.NEXT_PUBLIC_API_URL + 'services', {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
             },
             body: JSON.stringify({
                 id: service?.id,

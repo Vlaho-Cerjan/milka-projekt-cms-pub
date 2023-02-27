@@ -44,7 +44,9 @@ export function SortableItem({ faq, index, items, setItems }: { faq: items, inde
         fetch(process.env.NEXT_PUBLIC_API_URL + `faq`, {
             method: "DELETE",
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
             },
             body: JSON.stringify({
                 id: id,

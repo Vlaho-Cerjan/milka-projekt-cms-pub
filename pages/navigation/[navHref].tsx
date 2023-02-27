@@ -95,7 +95,9 @@ const NavPage = ({ nav, navs }: { nav: navigation, navs: navigation[] }) => {
         fetch(process.env.NEXT_PUBLIC_API_URL + 'navigation', {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
             },
             body: JSON.stringify({
                 id: nav.id,

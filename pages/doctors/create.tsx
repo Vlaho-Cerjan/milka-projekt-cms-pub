@@ -52,7 +52,9 @@ const CreateDoctorPage = ({ doctors }: { doctors: doctors[] }) => {
         fetch(process.env.NEXT_PUBLIC_API_URL + 'doctors', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
             },
             body: JSON.stringify({
                 first_name,

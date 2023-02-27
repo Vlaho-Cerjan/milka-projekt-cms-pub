@@ -75,7 +75,9 @@ const Page = ({ page }: InferGetStaticPropsType<typeof getStaticProps>) => {
         fetch(process.env.NEXT_PUBLIC_API_URL + 'page_info', {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
             },
             body: JSON.stringify({
                 id: page.id,
