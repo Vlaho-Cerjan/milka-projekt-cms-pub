@@ -23,7 +23,7 @@ const CompanyInfo = () => {
     const [coords, setCoords] = React.useState("");
 
     React.useEffect(() => {
-        fetch(process.env.NEXT_PUBLIC_API_URL + 'company_info/get_company', {
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'company_info', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
