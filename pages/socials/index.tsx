@@ -12,24 +12,7 @@ import { useRouter } from 'next/router';
 import { CustomThemeContext } from '../../app/store/customThemeContext';
 import { socialTypes } from '../../app/store/socials';
 
-export const getStaticProps = async ({ params }: { params: { pageId: string } }) => {
-    const prisma = new PrismaClient();
-
-    const socialsArray = await prisma.socials.findMany({
-        where: {
-            active: 1
-        }
-    });
-
-    return {
-        props: {
-            socialsArray,
-        },
-    };
-
-}
-
-const Socials = ({ socialsArray }: { socialsArray: social[] }) => {
+const Socials = () => {
     const router = useRouter();
     const { isDark, theme } = React.useContext(CustomThemeContext);
     const { enqueueSnackbar } = useSnackbar();
@@ -43,28 +26,30 @@ const Socials = ({ socialsArray }: { socialsArray: social[] }) => {
     }[]>([]);
 
     React.useEffect(() => {
-        setItems(socialsArray.map((item) => ({
-            id: item.id,
-            name: item.name,
-            href: item.href,
-            type: item.type,
-            locked: true,
-        })));
+        // fetch data
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'socials')
+            .then((res) => res.json())
+            .then((data: social[]) => {
+                setItems(
+                    data.map((item) => {
+                        return {
+                            id: item.id,
+                            name: item.name,
+                            href: item.href,
+                            type: item.type,
+                            locked: true,
+                        };
+                    })
+                );
+            })
+            .catch((err) => {
+                console.log(err);
+            });
 
         return () => {
             setItems([]);
         }
     }, []);
-
-    React.useEffect(() => {
-        setItems(socialsArray.map((item) => ({
-            id: item.id,
-            name: item.name,
-            href: item.href,
-            type: item.type,
-            locked: true,
-        })));
-    }, [socialsArray]);
 
     const unlockItem = (id: number) => {
         setItems(items.map((item) => {
@@ -83,7 +68,7 @@ const Socials = ({ socialsArray }: { socialsArray: social[] }) => {
             method: "DELETE",
             headers: {
                 'Content-Type': 'application/json',
-                },
+            },
             body: JSON.stringify({
                 id: id,
             })
