@@ -50,6 +50,20 @@ const Socials = ({ socialsArray }: { socialsArray: social[] }) => {
             type: item.type,
             locked: true,
         })));
+
+        return () => {
+            setItems([]);
+        }
+    }, []);
+
+    React.useEffect(() => {
+        setItems(socialsArray.map((item) => ({
+            id: item.id,
+            name: item.name,
+            href: item.href,
+            type: item.type,
+            locked: true,
+        })));
     }, [socialsArray]);
 
     const unlockItem = (id: number) => {
