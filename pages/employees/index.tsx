@@ -11,28 +11,11 @@ import StyledUpload from '../../app/components/common/styledInputs/styledUpload/
 import { UploadFileContainer } from '../../app/components/common/styledInputs/styledUploadFormContainer/styledUploadFormContainer';
 import { UploadFileFormLabel } from '../../app/components/common/styledInputs/styledUploadFormLabel/styledUploadFormLabel';
 
-export const getStaticProps = async () => {
-    const prisma = new PrismaClient();
-
-    const employees = await prisma.employees.findMany({
-        where: {
-            active: 1
-        }
-    });
-
-    return {
-        props: {
-            employees,
-        },
-    };
-
-}
-
 interface items extends employees {
     locked: boolean;
 }
 
-const Employees = ({ employees }: { employees: employees[] }) => {
+const Employees = () => {
     const { enqueueSnackbar } = useSnackbar();
     const [image, setImage] = React.useState<string>("");
 
@@ -40,8 +23,19 @@ const Employees = ({ employees }: { employees: employees[] }) => {
     const [items, setItems] = React.useState<items[]>([]);
 
     React.useEffect(() => {
-        setItems(employees.map((item) => ({ ...item, locked: true })));
-    }, [employees]);
+        fetch(process.env.NEXT_PUBLIC_API_URL + `employees`)
+            .then((res) => res.json())
+            .then((employees: employees[]) => {
+                setItems(employees.map((item) => ({ ...item, locked: true })));
+            })
+            .catch((err) => {
+                enqueueSnackbar('Error: ' + err, { variant: 'error' });
+            });
+
+        return () => {
+            setItems([]);
+        }
+    }, []);
 
     const unlockItem = (id: number) => {
         setItems(items.map((item) => {
@@ -60,7 +54,7 @@ const Employees = ({ employees }: { employees: employees[] }) => {
             method: "DELETE",
             headers: {
                 'Content-Type': 'application/json',
-                },
+            },
             body: JSON.stringify({
                 id: id,
             })
@@ -159,26 +153,26 @@ const Employees = ({ employees }: { employees: employees[] }) => {
                                     {StyledLabel("Akcije")}
                                     <Box sx={{ display: "flex", alignItems: "center" }}>
                                         {!employee.locked ?
-                                        <Button
-                                            variant='contained'
-                                            sx={{ minWidth: 0, padding: "14px", mr: "12px" }}
-                                            color='error'
-                                            onClick={() => {
-                                                // lock employee
-                                                setItems(items.map((item) => {
-                                                    if (item.id === employee.id) {
-                                                        return {
-                                                            ...item,
-                                                            locked: true
+                                            <Button
+                                                variant='contained'
+                                                sx={{ minWidth: 0, padding: "14px", mr: "12px" }}
+                                                color='error'
+                                                onClick={() => {
+                                                    // lock employee
+                                                    setItems(items.map((item) => {
+                                                        if (item.id === employee.id) {
+                                                            return {
+                                                                ...item,
+                                                                locked: true
+                                                            }
                                                         }
-                                                    }
-                                                    return item;
-                                                }));
-                                            }}
-                                        >
-                                            <CancelOutlined />
-                                        </Button>
-                                        : null}
+                                                        return item;
+                                                    }));
+                                                }}
+                                            >
+                                                <CancelOutlined />
+                                            </Button>
+                                            : null}
                                         <Button onClick={() => {
                                             if (employee.locked) {
                                                 unlockItem(employee.id);
@@ -393,7 +387,7 @@ const Employees = ({ employees }: { employees: employees[] }) => {
                             <Grid item xs={12} sm={12} md={6}>
                                 <UploadFileContainer>
                                     <UploadFileFormLabel>SLIKA</UploadFileFormLabel>
-                                    <StyledUpload aspectRatio={1/1} type="image" file={employee.img_src ? employee.img_src : ""} setFile={
+                                    <StyledUpload aspectRatio={1 / 1} type="image" file={employee.img_src ? employee.img_src : ""} setFile={
                                         (file) => {
                                             setItems(items.map((item) => {
                                                 if (item.id === employee.id) {

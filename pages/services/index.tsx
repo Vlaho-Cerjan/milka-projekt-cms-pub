@@ -10,49 +10,48 @@ import { useSensors, useSensor, MouseSensor, TouchSensor, DndContext, closestCen
 import { ServiceSortableItem } from '../../app/components/servicePage/serviceSortableItem';
 import { InferGetStaticPropsType } from "next";
 
-export const getStaticProps = async () => {
-    const prisma = new PrismaClient();
-
-    // get services and subservices and store subservices in services
-    let services: any = await prisma.services.findMany({
-        where: {
-            active: 1,
-        },
-        orderBy: {
-            item_order: 'asc',
-        }
-    });
-
-    const subservices = await prisma.subservices.findMany({
-        where: {
-            active: 1,
-        },
-        orderBy: {
-            item_order: 'asc',
-        }
-    });
-
-    const servicesWithSubservices = services.map((service: services) => {
-        return {
-            ...service,
-            subservices: subservices.filter((subservice) => subservice.usluga_id === service.id),
-        };
-    });
-
-    services = servicesWithSubservices;
-
-    return {
-        props: {
-            services,
-        },
-    };
-}
-
 interface ServicesWithSubservices extends services {
     subservices: subservices[];
 }
 
-const Services = ({ services }: { services: ServicesWithSubservices[] }) => {
+const Services = () => {
+    React.useEffect(() => {
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'services_with_subservices')
+            .then((res) => res.json())
+            .then((services: ServicesWithSubservices[]) => {
+                console.log(services);
+                setServicesState(services);
+
+                const subservices = services.map((service) => {
+                    return service.subservices;
+                });
+
+                const tempSubservices = subservices.flat();
+
+                setSubservicesState(() => {
+                    const children: { [key: string]: subservices[] } = {};
+                    tempSubservices.filter(subservice => subservice.usluga_id !== null).forEach(subservice => {
+                        if (subservice.usluga_id) {
+                            if (children[subservice.usluga_id.toString()]) {
+                                children[subservice.usluga_id.toString()].push(subservice);
+                            } else {
+                                children[subservice.usluga_id.toString()] = [subservice];
+                            }
+                        }
+                    });
+                    return children;
+                });
+            }
+            )
+            .catch((err) => {
+                console.log(err);
+            })
+
+        return () => {
+            setServicesState(null);
+        }
+    }, []);
+
     const [servicesState, setServicesState] = React.useState<ServicesWithSubservices[] | null>(null);
     const [subservicesState, setSubservicesState] = React.useState<{
         [key: string]: subservices[];
@@ -159,32 +158,6 @@ const Services = ({ services }: { services: ServicesWithSubservices[] }) => {
             }
         }
     }
-
-    React.useEffect(() => {
-        if (services) {
-            setServicesState(services);
-
-            const subservices = services.map((service) => {
-                return service.subservices;
-            });
-
-            const tempSubservices = subservices.flat();
-
-            setSubservicesState(() => {
-                const children: { [key: string]: subservices[] } = {};
-                tempSubservices.filter(subservice => subservice.usluga_id !== null).forEach(subservice => {
-                    if (subservice.usluga_id) {
-                        if (children[subservice.usluga_id.toString()]) {
-                            children[subservice.usluga_id.toString()].push(subservice);
-                        } else {
-                            children[subservice.usluga_id.toString()] = [subservice];
-                        }
-                    }
-                });
-                return children;
-            });
-        }
-    }, [services]);
 
     return (
         <StyledContainer>

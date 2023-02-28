@@ -176,6 +176,7 @@ model page_info {
   create_at        String  @db.VarChar(255)
   update_at        String? @db.VarChar(255)
   delete_at        String? @db.VarChar(255)
+  active           Int     @default(1) @db.TinyInt
 }
 
 model socials {

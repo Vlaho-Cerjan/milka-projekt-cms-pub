@@ -9,24 +9,7 @@ import StyledInput from '../../app/components/common/styledInputs/styledInput';
 import { useSnackbar } from 'notistack';
 import { InferGetStaticPropsType } from "next";
 
-export const getStaticProps = async ({ params }: { params: { pageId: string } }) => {
-    const prisma = new PrismaClient();
-
-    const companyInfo = await prisma.company_info.findFirst({
-        where: {
-            id: 1
-        }
-    });
-
-    return {
-        props: {
-            companyInfo,
-        },
-    };
-
-}
-
-const CompanyInfo = ({ companyInfo }: InferGetStaticPropsType<typeof getStaticProps>) => {
+const CompanyInfo = () => {
     const { enqueueSnackbar } = useSnackbar();
     const [company_info, setCompany_info] = React.useState<company_info | null>(null);
     const [name, setName] = React.useState("");
@@ -40,19 +23,38 @@ const CompanyInfo = ({ companyInfo }: InferGetStaticPropsType<typeof getStaticPr
     const [coords, setCoords] = React.useState("");
 
     React.useEffect(() => {
-        if (companyInfo) {
-            setCompany_info(companyInfo);
-            setName(companyInfo.name);
-            if (companyInfo.title) setTitle(companyInfo.title);
-            if (companyInfo.email) setEmail(companyInfo.email);
-            if (companyInfo.url) setUrl(companyInfo.url);
-            setWorking_hours(companyInfo.working_hours);
-            if (companyInfo.address) setAddress(companyInfo.address);
-            setAddress_short(companyInfo.address_short);
-            if (companyInfo.phone) setPhone(companyInfo.phone);
-            setCoords(companyInfo.coords);
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'company_info/get_company', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(companyInfo => {
+
+                if (companyInfo) {
+                    setCompany_info(companyInfo);
+                    setName(companyInfo.name);
+                    if (companyInfo.title) setTitle(companyInfo.title);
+                    if (companyInfo.email) setEmail(companyInfo.email);
+                    if (companyInfo.url) setUrl(companyInfo.url);
+                    setWorking_hours(companyInfo.working_hours);
+                    if (companyInfo.address) setAddress(companyInfo.address);
+                    setAddress_short(companyInfo.address_short);
+                    if (companyInfo.phone) setPhone(companyInfo.phone);
+                    setCoords(companyInfo.coords);
+                }
+
+            })
+            .catch(err => {
+                console.log(err);
+            }
+            );
+
+        return () => {
+            setCompany_info(null);
         }
-    }, [companyInfo]);
+    }, []);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -61,7 +63,7 @@ const CompanyInfo = ({ companyInfo }: InferGetStaticPropsType<typeof getStaticPr
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                },
+            },
             body: JSON.stringify({
                 id: 1,
                 name,

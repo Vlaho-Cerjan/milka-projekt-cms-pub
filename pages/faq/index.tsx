@@ -1,43 +1,20 @@
-import { PrismaClient, faq } from '@prisma/client';
+import { faq } from '@prisma/client';
 import { StyledContainer } from '../../app/components/common/container/styledContainer';
-import { Box, Typography, Button, Paper, Divider, Grid, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import { Box, Typography, Button, Paper, Divider } from '@mui/material';
 import SEO from '../../app/components/common/SEO/SEO';
-import { EditOutlined, KeyboardArrowLeft, DeleteOutlineOutlined, SaveOutlined, CancelOutlined } from '@mui/icons-material';
+import { KeyboardArrowLeft } from '@mui/icons-material';
 import React from 'react';
-import { StyledLabel } from '../../app/components/common/styledInputs/styledLabel/styledLabel';
-import StyledInput from '../../app/components/common/styledInputs/styledInput';
 import { useSnackbar } from 'notistack';
-import { useRouter } from 'next/router';
 import { CustomThemeContext } from '../../app/store/customThemeContext';
 import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import { DndContext, MouseSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableItem } from '../../app/components/faq/sortableItem';
 
-export const getStaticProps = async ({ params }: { params: { pageId: string } }) => {
-    const prisma = new PrismaClient();
-
-    const faqs = await prisma.faq.findMany({
-        where: {
-            active: 1
-        },
-        orderBy: {
-            faq_order: 'asc'
-        }
-    });
-
-    return {
-        props: {
-            faqs,
-        },
-    };
-
-}
-
 interface items extends faq {
     locked: boolean;
 }
 
-const FAQ = ({ faqs }: { faqs: faq[] }) => {
+const FAQ = () => {
     const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
     const { isDark, theme } = React.useContext(CustomThemeContext);
     const { enqueueSnackbar } = useSnackbar();
@@ -45,23 +22,29 @@ const FAQ = ({ faqs }: { faqs: faq[] }) => {
     const [items, setItems] = React.useState<items[]>([]);
 
     React.useEffect(() => {
-        setItems(faqs.map((item) => ({
-            ...item,
-            locked: true
-        })));
-    }, [faqs]);
-
-    const unlockItem = (id: number) => {
-        setItems(items.map((item) => {
-            if (item.id === id) {
-                return {
-                    ...item,
-                    locked: !item.locked
-                }
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'faq', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
             }
-            return item;
-        }));
-    }
+        })
+            .then((res) => {
+                return res.json()
+            })
+            .then((faqs: faq[]) => {
+                setItems(faqs.map((item) => ({
+                    ...item,
+                    locked: true
+                })));
+            })
+            .catch((err) => {
+                enqueueSnackbar('Error: ' + err, { variant: 'error' });
+            });
+
+        return () => {
+            setItems([]);
+        }
+    }, []);
 
     function handleDragEnd(event: any) {
         const { active, over } = event;
@@ -101,54 +84,6 @@ const FAQ = ({ faqs }: { faqs: faq[] }) => {
         }
     }
 
-
-    const deleteItem = (id: number) => {
-        fetch(process.env.NEXT_PUBLIC_API_URL + `faq`, {
-            method: "DELETE",
-            headers: {
-                'Content-Type': 'application/json',
-                },
-            body: JSON.stringify({
-                id: id,
-            })
-        })
-            .then((res) => {
-                if (res.ok) {
-                    enqueueSnackbar('Uspješno ste izbrisali faq!', { variant: 'success' });
-                    setItems(items.filter((item) => item.id !== id));
-                }
-                else {
-                    Promise.reject(res);
-                }
-            })
-            .catch((err) => {
-                enqueueSnackbar('Došlo je do greške!', { variant: 'error' });
-                console.log(err);
-            });
-    }
-
-    const handleUpdateItem = (faq: items) => {
-        fetch(process.env.NEXT_PUBLIC_API_URL + `faq`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(faq),
-        })
-            .then((res) => res.json())
-            .then((data: faq) => {
-                enqueueSnackbar('Uspješno ste izmjenili društvenu mrežu!', { variant: 'success' });
-                setItems((prev) => prev.map((item) => {
-                    if (item.id === data.id) {
-                        return {
-                            ...data,
-                            locked: true,
-                        }
-                    }
-                    return item;
-                }));
-            });
-    }
     return (
         <StyledContainer>
             <SEO page_info={

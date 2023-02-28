@@ -9,22 +9,6 @@ import { SortableItem } from '../../app/components/navPage/sortableItem';
 import { useSnackbar } from 'notistack';
 import NavChildren from '../../app/components/navPage/navChildren';
 
-export const getStaticProps = async () => {
-    const prisma = new PrismaClient();
-
-    const navigations = await prisma.navigation.findMany({
-        orderBy: {
-            nav_order: 'asc'
-        }
-    });
-
-    return {
-        props: {
-            navigations,
-        },
-    };
-}
-
 const Navigation = ({ navigations }: { navigations: navigation[] }) => {
     const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
     const [nav, setNav] = React.useState(navigations);
@@ -52,30 +36,43 @@ const Navigation = ({ navigations }: { navigations: navigation[] }) => {
     }
 
     React.useEffect(() => {
-        if (nav) {
-            setMainNav(nav.filter(navTemp => navTemp.parent_id === null).sort(
-                (a, b) => a.nav_order - b.nav_order
-            ));
-            setChildrenNav(() => {
-                const children: { [key: string]: navigation[] } = {};
-                nav.filter(navTemp => navTemp.parent_id !== null).forEach(navTemp => {
-                    if (navTemp.parent_id) {
-                        if (children[navTemp.parent_id.toString()]) {
-                            children[navTemp.parent_id.toString()].push(navTemp);
-                        } else {
-                            children[navTemp.parent_id.toString()] = [navTemp];
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'navigation', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(res => res.json())
+            .then((nav: navigation[]) => {
+                setMainNav(nav.filter(navTemp => navTemp.parent_id === null).sort(
+                    (a, b) => a.nav_order - b.nav_order
+                ));
+                setChildrenNav(() => {
+                    const children: { [key: string]: navigation[] } = {};
+                    nav.filter(navTemp => navTemp.parent_id !== null).forEach(navTemp => {
+                        if (navTemp.parent_id) {
+                            if (children[navTemp.parent_id.toString()]) {
+                                children[navTemp.parent_id.toString()].push(navTemp);
+                            } else {
+                                children[navTemp.parent_id.toString()] = [navTemp];
+                            }
                         }
-                    }
+                    });
+                    return children;
                 });
-                return children;
-            });
-        }
+
+            })
+            .catch(err => {
+                enqueueSnackbar('Error: ' + err, { variant: 'error' });
+            }
+            );
+
 
         return () => {
             setMainNav(null);
             setChildrenNav(null);
         }
-    }, [nav]);
+    }, []);
 
     function handleDragChildEnd(event: any, childId: number) {
         const { active, over } = event;

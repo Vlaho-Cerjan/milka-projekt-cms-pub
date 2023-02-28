@@ -5,19 +5,7 @@ import { PrismaClient, page_info } from '@prisma/client';
 import React from 'react';
 import { useSnackbar } from 'notistack';
 
-export const getStaticProps = async () => {
-    const prisma = new PrismaClient();
-
-    const page_info = await prisma.page_info.findMany();
-
-    return {
-        props: {
-            page_info,
-        },
-    };
-}
-
-const Pages = ({ page_info }: { page_info: page_info[] }) => {
+const Pages = () => {
     const [pages, setPages] = React.useState<page_info[] | null>(null);
     const { enqueueSnackbar } = useSnackbar();
     const handleDelete = (pageId: string) => {
@@ -27,7 +15,7 @@ const Pages = ({ page_info }: { page_info: page_info[] }) => {
             .then((res) => res.json())
             .then(() => {
                 enqueueSnackbar('Uspješno ste izbrisali stranicu!', { variant: 'success' });
-                fetch(process.env.NEXT_PUBLIC_API_URL + 'pages')
+                fetch(process.env.NEXT_PUBLIC_API_URL + 'page_info')
                     .then((res) => res.json())
                     .then((data) => {
                         setPages(data);
@@ -37,10 +25,21 @@ const Pages = ({ page_info }: { page_info: page_info[] }) => {
     }
 
     React.useEffect(() => {
-        if (page_info) {
-            setPages(page_info);
+        fetch(process.env.NEXT_PUBLIC_API_URL + 'page_info')
+            .then((res) => res.json())
+            .then((data) => {
+                setPages(data);
+            }
+            )
+            .catch((err) => {
+                console.log(err);
+            }
+            );
+
+        return () => {
+            setPages(null);
         }
-    }, [page_info]);
+    }, []);
 
     const getLastWordFromHref = (href: string) => {
         const hrefArray = href.split('/');

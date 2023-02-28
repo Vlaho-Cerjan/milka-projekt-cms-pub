@@ -11,28 +11,11 @@ import StyledUpload from '../../app/components/common/styledInputs/styledUpload/
 import { UploadFileContainer } from '../../app/components/common/styledInputs/styledUploadFormContainer/styledUploadFormContainer';
 import { UploadFileFormLabel } from '../../app/components/common/styledInputs/styledUploadFormLabel/styledUploadFormLabel';
 
-export const getStaticProps = async ({ params }: { params: { pageId: string } }) => {
-    const prisma = new PrismaClient();
-
-    const doctors = await prisma.doctors.findMany({
-        where: {
-            active: 1
-        }
-    });
-
-    return {
-        props: {
-            doctors,
-        },
-    };
-
-}
-
 interface items extends doctors {
     locked: boolean;
 }
 
-const Doctors = ({ doctors }: { doctors: doctors[] }) => {
+const Doctors = () => {
     const { enqueueSnackbar } = useSnackbar();
     const [image, setImage] = React.useState<string>("");
 
@@ -40,8 +23,21 @@ const Doctors = ({ doctors }: { doctors: doctors[] }) => {
     const [items, setItems] = React.useState<items[]>([]);
 
     React.useEffect(() => {
-        setItems(doctors.map((item) => ({ ...item, locked: true })));
-    }, [doctors]);
+        fetch(process.env.NEXT_PUBLIC_API_URL + `doctors`)
+            .then((res) => res.json())
+            .then((doctors: doctors[]) => {
+
+                setItems(doctors.map((item) => ({ ...item, locked: true })));
+            })
+            .catch((err) => {
+                enqueueSnackbar('Error: ' + err, { variant: 'error' });
+            }
+            );
+
+        return () => {
+            setItems([]);
+        }
+    }, []);
 
     const unlockItem = (id: number) => {
         setItems(items.map((item) => {
@@ -60,7 +56,7 @@ const Doctors = ({ doctors }: { doctors: doctors[] }) => {
             method: "DELETE",
             headers: {
                 'Content-Type': 'application/json',
-                },
+            },
             body: JSON.stringify({
                 id: id,
             })
@@ -159,26 +155,26 @@ const Doctors = ({ doctors }: { doctors: doctors[] }) => {
                                     {StyledLabel("Akcije")}
                                     <Box sx={{ display: "flex", alignItems: "center" }}>
                                         {!doctor.locked ?
-                                        <Button
-                                            variant='contained'
-                                            sx={{ minWidth: 0, padding: "14px", mr: "12px" }}
-                                            color='error'
-                                            onClick={() => {
-                                                // lock doctor
-                                                setItems(items.map((item) => {
-                                                    if (item.id === doctor.id) {
-                                                        return {
-                                                            ...item,
-                                                            locked: true
+                                            <Button
+                                                variant='contained'
+                                                sx={{ minWidth: 0, padding: "14px", mr: "12px" }}
+                                                color='error'
+                                                onClick={() => {
+                                                    // lock doctor
+                                                    setItems(items.map((item) => {
+                                                        if (item.id === doctor.id) {
+                                                            return {
+                                                                ...item,
+                                                                locked: true
+                                                            }
                                                         }
-                                                    }
-                                                    return item;
-                                                }));
-                                            }}
-                                        >
-                                            <CancelOutlined />
-                                        </Button>
-                                        : null}
+                                                        return item;
+                                                    }));
+                                                }}
+                                            >
+                                                <CancelOutlined />
+                                            </Button>
+                                            : null}
                                         <Button onClick={() => {
                                             if (doctor.locked) {
                                                 unlockItem(doctor.id);
@@ -374,7 +370,7 @@ const Doctors = ({ doctors }: { doctors: doctors[] }) => {
                             <Grid item xs={12} sm={12} md={6}>
                                 <UploadFileContainer>
                                     <UploadFileFormLabel>SLIKA</UploadFileFormLabel>
-                                    <StyledUpload aspectRatio={1/1} type="image" file={doctor.img_src ? doctor.img_src : ""} setFile={
+                                    <StyledUpload aspectRatio={1 / 1} type="image" file={doctor.img_src ? doctor.img_src : ""} setFile={
                                         (file) => {
                                             setItems(items.map((item) => {
                                                 if (item.id === doctor.id) {
