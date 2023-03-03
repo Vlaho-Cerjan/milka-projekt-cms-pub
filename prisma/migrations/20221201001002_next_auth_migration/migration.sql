@@ -92,7 +92,7 @@ CREATE TABLE `employees` (
     `bio` MEDIUMTEXT NULL,
     `email` VARCHAR(255) NULL,
     `phone` VARCHAR(255) NULL,
-    `employe_title` VARCHAR(255) NULL,
+    `employee_title` VARCHAR(255) NULL,
     `create_date` VARCHAR(255) NULL,
     `update_date` VARCHAR(255) NULL,
     `delete_date` VARCHAR(255) NULL,

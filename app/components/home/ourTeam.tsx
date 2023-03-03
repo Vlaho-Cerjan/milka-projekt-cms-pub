@@ -19,7 +19,7 @@ interface OurTeamProps {
         img_src: string | null,
         slug: string | null,
         alt: string | null,
-        employe_title: string | null,
+        employee_title: string | null,
         create_at: string,
         update_at: string | null,
         delete_at: string | null,
@@ -51,7 +51,7 @@ const OurTeam = ({employees}: OurTeamProps) => {
     const dataEmployes = (
         employees.map(employe => {
             return(
-                <Grid key={'employe_'+employe.id} item xs={12} sm={6} md={4} lg={3}>
+                <Grid key={'employee_'+employe.id} item xs={12} sm={6} md={4} lg={3}>
                     <StyledCard
                         variant="outlined"
                     >
@@ -67,9 +67,7 @@ const OurTeam = ({employees}: OurTeamProps) => {
                                 width={270}
                                 height={273}
                                 quality={90}
-                                layout="responsive"
                                 className="resImg"
-                                objectFit="cover"
                                 sizes="250px"
                             />
                         </Box>
@@ -83,11 +81,11 @@ const OurTeam = ({employees}: OurTeamProps) => {
                                 >
                                     {(employe.title?employe.title:"")+" "+employe.first_name+" "+(employe.aditional_names?employe.aditional_names:"")+" "+employe.last_name}
                                 </Typography>
-                                {employe.employe_title?
+                                {employe.employee_title?
                                 <Typography
                                     textAlign="center"
                                 >
-                                    {employe.employe_title}
+                                    {employe.employee_title}
                                 </Typography>
                                 :null
                                 }

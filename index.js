@@ -1,11 +1,18 @@
 import express from 'express';
 import cors from 'cors';
 import { Prisma, PrismaClient } from "@prisma/client";
-import urlServer from './config/server.js';
 import fs from 'fs';
 
-const corsOptions = {
-    origin: urlServer,
+var whitelist = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5000', 'https://milka-projekt-api.vercel.app', 'https://milka-projekt-cms-sigma.vercel.app']
+var corsOptionsDelegate = function (req, callback) {
+    var methods = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'];
+  var corsOptions;
+  if (whitelist.indexOf(req.header('Origin')) !== -1) {
+    corsOptions = { origin: true, methods: methods, optionsSuccessStatus: 200 } // reflect (enable) the requested origin in the CORS response
+  } else {
+    corsOptions = { origin: false } // disable CORS for this request
+  }
+  callback(null, corsOptions) // callback expects two parameters: error and options
 }
 
 const RemoveNullValues = (obj) => {
@@ -35,21 +42,101 @@ const SaveImageToDir = async (image, name, tempPath) => {
     return tempName + ".png";
 }
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 // Initialize Express
 const app = express();
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptionsDelegate));
 app.use(express.json({
-    limit: '50mb'
+    limit: '50mb',
 }));
 
+app.get('/api', (req, res) => {
+    res.send('Hey this is my API running 🥳')
+  })
+
+
 // add preflight OPTIONS request for all routes
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptionsDelegate)) // include before other routes
+
+app.get("/api/prisma/homepage", async (req, res) => {
+    const services = await prisma.services.findMany({
+        where: {
+          active: 1
+        },
+        orderBy: {
+          item_order: "asc"
+        }
+      });
+      const news = await prisma.blog.findMany({
+        take: 4,
+      })
+      const employees = await prisma.employees.findMany({
+        where: {
+          active: 1
+        },
+      });
+      const companyInfo = await prisma.company_info.findFirst();
+      const page_info = await prisma.page_info.findFirst(
+        {
+          where: {
+            page_slug: "/"
+          }
+        }
+      );
+
+        res.status(200).json({
+            services: services,
+            news: news,
+            employees: employees,
+            companyInfo: companyInfo,
+            page_info: page_info
+        });
+});
 
 // Page Info Routes
 
-app.post("/prisma/page_info", async (req, res) => {
+app.get("/api/prisma/page_info", (req, res) => {
+    prisma.page_info.findMany({
+        where: {
+            active: 1
+        }
+    })
+        .then((data) => {
+            res.status(200).json(data);
+        }
+        )
+        .catch((error) => {
+            res.status(400).json({
+                success: false,
+                error: error
+            })
+        }
+        );
+});
+
+app.get("/api/prisma/page_info/:page_slug", (req, res) => {
+    prisma.page_info.findFirst({
+        where: {
+            page_slug: {
+                contains: req.params.page_slug
+            }
+        }
+    })
+        .then((data) => {
+            res.status(200).json(data);
+        }
+        )
+        .catch((error) => {
+            res.status(400).json({
+                success: false,
+                error: error
+            })
+        }
+        );
+});
+
+app.post("/api/prisma/page_info", async (req, res) => {
     if (typeof req.body.image !== "undefined" && req.body.image) {
         const imageName = await SaveImageToDir(req.body.image, null, "/public/images/page_info/");
         if (imageName) req.body.image = "/images/page_info/" + imageName;
@@ -84,14 +171,10 @@ app.post("/prisma/page_info", async (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.put("/prisma/page_info", async (req, res) => {
+app.put("/api/prisma/page_info", async (req, res) => {
     if (typeof req.body.image !== "undefined" && req.body.image) {
         const imageName = await SaveImageToDir(req.body.image, null, "/public/images/page_info/");
         if (imageName) req.body.image = "/images/page_info/" + imageName;
@@ -129,16 +212,12 @@ app.put("/prisma/page_info", async (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
 // Company Info Routes
 
-app.get("/prisma/company_info", (req, res) => {
+app.get("/api/prisma/company_info", (req, res) => {
     prisma.company_info.findFirst(
         {
             where: {
@@ -165,14 +244,10 @@ app.get("/prisma/company_info", (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.put("/prisma/company_info", (req, res) => {
+app.put("/api/prisma/company_info", (req, res) => {
     prisma.company_info.update({
         where: {
             id: req.body.id,
@@ -209,16 +284,12 @@ app.put("/prisma/company_info", (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
 // Navigation Routes
 
-app.get("/prisma/navigation", (_req, res) => {
+app.get("/api/prisma/navigation", (_req, res) => {
     prisma.navigation.findMany()
         .then((data) => {
             res.status(200).json(data);
@@ -239,14 +310,10 @@ app.get("/prisma/navigation", (_req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.post("/prisma/navigation", (req, res) => {
+app.post("/api/prisma/navigation", (req, res) => {
     const tempData = RemoveNullValues({
         name: req.body.name,
         href: req.body.href,
@@ -281,14 +348,10 @@ app.post("/prisma/navigation", (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.put("/prisma/navigation", (req, res) => {
+app.put("/api/prisma/navigation", (req, res) => {
     const tempData = RemoveNullValues({
         name: req.body.name,
         href: req.body.href,
@@ -326,14 +389,10 @@ app.put("/prisma/navigation", (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.put("/prisma/navigation/order", (req, res) => {
+app.put("/api/prisma/navigation/order", (req, res) => {
     const { orderedIds } = req.body;
 
     let errors = [];
@@ -369,13 +428,11 @@ app.put("/prisma/navigation/order", (req, res) => {
         success: true,
         message: "Order updated"
     });
-
-    prisma.$disconnect();
 });
 
 // Social Media Routes
 
-app.get("/prisma/socials", (_req, res) => {
+app.get("/api/prisma/socials", (_req, res) => {
     prisma.socials.findMany({
         where: {
             active: 1,
@@ -400,14 +457,10 @@ app.get("/prisma/socials", (_req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.post("/prisma/socials", (req, res) => {
+app.post("/api/prisma/socials", (req, res) => {
     prisma.socials.create({
         data: RemoveNullValues({
             name: req.body.name,
@@ -435,16 +488,12 @@ app.post("/prisma/socials", (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
 // Soft Delete
 
-app.delete("/prisma/socials", (req, res) => {
+app.delete("/api/prisma/socials", (req, res) => {
     prisma.socials.update({
         where: {
             id: req.body.id
@@ -473,14 +522,10 @@ app.delete("/prisma/socials", (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.put("/prisma/socials", (req, res) => {
+app.put("/api/prisma/socials", (req, res) => {
     prisma.socials.update({
         where: {
             id: req.body.id,
@@ -511,18 +556,42 @@ app.put("/prisma/socials", (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
 // doctors routes
 
+app.get("/api/prisma/doctors", (_req, res) => {
+    prisma.doctors.findMany({
+        where: {
+            active: 1,
+        }
+    })
+        .then((data) => {
+            res.status(200).json(data);
+        }
+        )
+        .catch((error) => {
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                // The .code property can be accessed in a type-safe manner
+                if (error.code === 'P2002') {
+                    res.status(400).json({
+                        success: false,
+                        error: "Duplicate entry"
+                    });
+                }
+            }
+            res.status(400).json({
+                success: false,
+                error: error
+            })
+        }
+        );
+});
+
 // get doctors with filter where first_name or last_name has the filter string in it ignore cases
 
-app.post("/prisma/doctors/filter", (req, res) => {
+app.post("/api/prisma/doctors/filter", (req, res) => {
     if (req.body.filter !== "" || req.body.filter !== null || typeof req.body.filter !== undefined) {
         prisma.doctors.findMany({
             where: {
@@ -567,15 +636,11 @@ app.post("/prisma/doctors/filter", (req, res) => {
                     error: error
                 })
             }
-            )
-            .finally(async () => {
-                await prisma.$disconnect();
-            }
             );
     }
 });
 
-app.post("/prisma/doctors", async (req, res) => {
+app.post("/api/prisma/doctors", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
         const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/doctors/");
         if (imageName) req.body.img_src = "/images/doctors/" + imageName;
@@ -616,14 +681,10 @@ app.post("/prisma/doctors", async (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.put("/prisma/doctors", async (req, res) => {
+app.put("/api/prisma/doctors", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
         const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/doctors/");
         if (imageName) req.body.img_src = "/images/doctors/" + imageName;
@@ -666,14 +727,10 @@ app.put("/prisma/doctors", async (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.delete("/prisma/doctors", (req, res) => {
+app.delete("/api/prisma/doctors", (req, res) => {
     prisma.doctors.update({
         where: {
             id: req.body.id,
@@ -703,16 +760,12 @@ app.delete("/prisma/doctors", (req, res) => {
                 error: error
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
 // services routes
 
-app.get("/prisma/services", (req, res) => {
+app.get("/api/prisma/services", (req, res) => {
     prisma.services.findMany({
         where: {
             active: 1
@@ -741,15 +794,210 @@ app.get("/prisma/services", (req, res) => {
                 error: error.toString()
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
+        );
+});
+
+// get service or subservice by slug if active is 1, add services_list by id of service (usluga_id) or subservice (pod_usluga_id) and services_price_list by ids of services_list
+
+app.get("/api/prisma/services/:slug", (req, res) => {
+    prisma.services.findFirst({
+        where: {
+            slug: "/" + req.params.slug,
+            active: 1
+        }
+    })
+        .then((data) => {
+            if (data) {
+
+                prisma.services_list.findMany({
+                    where: {
+                        usluga_id: data.id,
+                        active: 1
+                    },
+                    // order by highligted first and then by item_order
+                    orderBy: [
+                        {
+                            highlighted: "desc"
+                        },
+                        {
+                            services_order: "asc"
+                        }
+                    ]
+                })
+                    .then((services_list) => {
+                        data.services_list = services_list;
+                        prisma.services_price_list.findMany({
+                            where: {
+                                service_list_id: {
+                                    in: services_list.map((item) => item.id)
+                                },
+                                active: 1
+                            },
+                            orderBy: {
+                                item_order: "asc"
+                            }
+                        })
+                            .then((services_price_list) => {
+                                data.services_price_list = services_price_list;
+                                res.status(200).json(data);
+                            })
+                            .catch((error) => {
+                                if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                                    // The .code property can be accessed in a type-safe manner
+                                    if (error.code === 'P2002') {
+                                        res.status(400).json({
+                                            success: false,
+                                            error: "Duplicate entry"
+                                        });
+                                    }
+                                }
+                                res.status(400).json({
+                                    success: false,
+                                    error: error,
+                                    name: 'services_price_list'
+                                })
+                            }
+                            );
+                    })
+                    .catch((error) => {
+                        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                            // The .code property can be accessed in a type-safe manner
+                            if (error.code === 'P2002') {
+                                res.status(400).json({
+                                    success: false,
+                                    error: "Duplicate entry"
+                                });
+                            }
+                        }
+                        res.status(400).json({
+                            success: false,
+                            error: error,
+                            name: 'services_list'
+                        })
+                    }
+                    );
+            } else {
+                prisma.subservices.findFirst({
+                    where: {
+                        slug: "/" + req.params.slug,
+                        active: 1
+                    }
+                })
+                    .then((data) => {
+                        if (data) {
+                            prisma.services_list.findMany({
+                                where: {
+                                    pod_usluga_id: data.id,
+                                    active: 1
+                                },
+                                orderBy: [
+                                    {
+                                        highlighted: "desc"
+                                    },
+                                    {
+                                        services_order: "asc"
+                                    }
+                                ]
+                            })
+                                .then((services_list) => {
+                                    data.services_list = services_list;
+                                    prisma.services_price_list.findMany({
+                                        where: {
+                                            service_list_id: {
+                                                in: services_list.map((item) => item.id)
+                                            },
+                                            active: 1
+                                        },
+                                        orderBy: {
+                                            item_order: "asc"
+                                        }
+                                    })
+                                        .then((services_price_list) => {
+                                            data.services_price_list = services_price_list;
+                                            res.status(200).json(data);
+                                        })
+                                        .catch((error) => {
+                                            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                                                // The .code property can be accessed in a type-safe manner
+                                                if (error.code === 'P2002') {
+                                                    res.status(400).json({
+                                                        success: false,
+                                                        error: "Duplicate entry"
+                                                    });
+                                                }
+                                            }
+                                            res.status(400).json({
+                                                success: false,
+                                                error: error,
+                                                name: 'services_price_list'
+                                            })
+                                        }
+                                        );
+                                })
+                                .catch((error) => {
+                                    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                                        // The .code property can be accessed in a type-safe manner
+                                        if (error.code === 'P2002') {
+                                            res.status(400).json({
+                                                success: false,
+                                                error: "Duplicate entry"
+                                            });
+                                        }
+                                    }
+                                    res.status(400).json({
+                                        success: false,
+                                        error: error,
+                                        name: 'services_list'
+                                    })
+                                }
+                                );
+                        } else {
+                            res.status(404).json({
+                                success: false,
+                                error: "Not found",
+                                name: 'services_list'
+                            });
+                        }
+                    })
+                    .catch((error) => {
+                        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                            // The .code property can be accessed in a type-safe manner
+                            if (error.code === 'P2002') {
+                                res.status(400).json({
+                                    success: false,
+                                    error: "Duplicate entry"
+                                });
+                            }
+                        }
+                        res.status(400).json({
+                            success: false,
+                            error: error,
+                            name: 'subservices'
+                        })
+                    }
+                    );
+            }
+        })
+        .catch((error) => {
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                // The .code property can be accessed in a type-safe manner
+                if (error.code === 'P2002') {
+                    res.status(400).json({
+                        success: false,
+                        error: "Duplicate entry"
+                    });
+                }
+            }
+            res.status(400).json({
+                success: false,
+                error: error
+            })
         }
         );
 });
 
 // get services with subservices based on the service id
-app.get("/prisma/services_with_subservices", (req, res) => {
+app.get("/api/prisma/services_with_subservices", (req, res) => {
     prisma.services.findMany({
         where: {
             active: 1
@@ -791,10 +1039,6 @@ app.get("/prisma/services_with_subservices", (req, res) => {
                         success: false,
                         error: error.toString()
                     })
-                })
-                .finally(async () => {
-                    await prisma.$disconnect();
-                    return;
                 });
         }
         )
@@ -814,14 +1058,10 @@ app.get("/prisma/services_with_subservices", (req, res) => {
                 error: error.toString()
             })
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.post("/prisma/services", async (req, res) => {
+app.post("/api/prisma/services", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
         const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
         if (imageName) req.body.img_src = "/images/home/" + imageName;
@@ -948,14 +1188,10 @@ app.post("/prisma/services", async (req, res) => {
                 success: false,
                 error: error
             })
-        })
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
-        );
+        });
 });
 
-app.put("/prisma/services", async (req, res) => {
+app.put("/api/prisma/services", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
         const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
         if (imageName) req.body.img_src = "/images/home/" + imageName;
@@ -1224,16 +1460,12 @@ app.put("/prisma/services", async (req, res) => {
 
             throw error;
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
 // delete service route with soft delete and id in route
 
-app.delete("/prisma/services/:id", async (req, res) => {
+app.delete("/api/prisma/services/:id", async (req, res) => {
     prisma.services.update({
         where: {
             id: parseInt(req.params.id),
@@ -1258,16 +1490,12 @@ app.delete("/prisma/services/:id", async (req, res) => {
                 error: error
             });
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
 // services order route
 
-app.put("/prisma/services/order", async (req, res) => {
+app.put("/api/prisma/services/order", async (req, res) => {
     const { orderedIds } = req.body;
 
     let errors = [];
@@ -1303,13 +1531,58 @@ app.put("/prisma/services/order", async (req, res) => {
         success: true,
         message: "Order updated"
     });
-
-    prisma.$disconnect();
 });
 
 // Subservices routes
 
-app.post("/prisma/subservices", async (req, res) => {
+app.get("/api/prisma/subservices/:service_id", async (req, res) => {
+    prisma.subservices.findMany({
+        where: {
+            usluga_id: parseInt(req.params.service_id),
+            active: 1
+        },
+        orderBy: {
+            item_order: "asc"
+        }
+    })
+        .then((data) => {
+            res.status(200).json(data);
+        }
+        )
+        .catch((error) => {
+            console.log(error, 'error subservices');
+            res.status(400).json({
+                success: false,
+                error: error
+            });
+        }
+        );
+});
+
+app.post("/api/prisma/subservices/getDoctors", async (req, res) => {
+    prisma.doctors.findMany({
+        where: {
+            id: {
+                in: req.body.doctors_ids
+            },
+            active: 1
+        }
+    })
+        .then((data) => {
+            res.status(200).json(data);
+        }
+        )
+        .catch((error) => {
+            console.log(error, 'error subservices');
+            res.status(400).json({
+                success: false,
+                error: error
+            });
+        }
+        );
+});
+
+app.post("/api/prisma/subservices", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
         const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
         if (imageName) req.body.img_src = "/images/home/" + imageName;
@@ -1437,14 +1710,10 @@ app.post("/prisma/subservices", async (req, res) => {
                 success: false,
                 error: error
             })
-        })
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
-        );
+        });
 });
 
-app.put("/prisma/subservices", async (req, res) => {
+app.put("/api/prisma/subservices", async (req, res) => {
     if (typeof req.body.img_src !== "undefined" && req.body.img_src) {
         const imageName = await SaveImageToDir(req.body.img_src, null, "/public/images/home/");
         if (imageName) req.body.img_src = "/images/home/" + imageName;
@@ -1714,16 +1983,12 @@ app.put("/prisma/subservices", async (req, res) => {
 
             throw error;
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
 // order subservices
 
-app.post("/prisma/subservices/order", async (req, res) => {
+app.post("/api/prisma/subservices/order", async (req, res) => {
     const { orderedIds } = req.body;
 
     let errors = [];
@@ -1759,14 +2024,54 @@ app.post("/prisma/subservices/order", async (req, res) => {
         success: true,
         message: "Order updated"
     });
-
-    prisma.$disconnect();
 });
 
 // employees routes
 
-app.post("/prisma/employees", async (req, res) => {
-    const { first_name, aditional_names, last_name, title, bio, email, phone, employe_title, img_src, slug, alt } = req.body;
+// get all employees
+
+app.get("/api/prisma/employees", async (req, res) => {
+    await prisma.employees.findMany({
+        where: {
+            active: 1
+        },
+    })
+        .then((data) => {
+            res.status(200).json(data);
+        })
+        .catch((error) => {
+            res.status(400).json({
+                success: false,
+                error: error
+            });
+        }
+        );
+});
+
+app.get("/api/prisma/employees/:employeeTitle", async (req, res) => {
+    const { employeeTitle } = req.params;
+
+    await prisma.employees.findMany({
+        where: {
+            employee_title: {
+                contains: employeeTitle,
+            }
+        },
+    })
+        .then((data) => {
+            res.status(200).json(data);
+        })
+        .catch((error) => {
+            res.status(400).json({
+                success: false,
+                error: error
+            });
+        }
+        );
+});
+
+app.post("/api/prisma/employees", async (req, res) => {
+    const { first_name, aditional_names, last_name, title, bio, email, phone, employee_title, img_src, slug, alt } = req.body;
 
     if (typeof img_src !== "undefined" && img_src) {
         const imageName = await SaveImageToDir(img_src, null, "/public/images/employees/");
@@ -1782,7 +2087,7 @@ app.post("/prisma/employees", async (req, res) => {
             bio: bio,
             email: email,
             phone: phone,
-            employe_title: employe_title,
+            employee_title: employee_title,
             img_src: img_src,
             slug: slug,
             alt: alt,
@@ -1813,15 +2118,11 @@ app.post("/prisma/employees", async (req, res) => {
 
             throw error;
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.put("/prisma/employees/", async (req, res) => {
-    const { id, first_name, aditional_names, last_name, title, bio, email, phone, employe_title, img_src, slug, alt } = req.body;
+app.put("/api/prisma/employees/", async (req, res) => {
+    const { id, first_name, aditional_names, last_name, title, bio, email, phone, employee_title, img_src, slug, alt } = req.body;
 
     if (typeof img_src !== "undefined" && img_src) {
         const imageName = await SaveImageToDir(img_src, null, "/public/images/employees/");
@@ -1840,7 +2141,7 @@ app.put("/prisma/employees/", async (req, res) => {
             bio: bio,
             email: email,
             phone: phone,
-            employe_title: employe_title,
+            employee_title: employee_title,
             img_src: img_src,
             slug: slug,
             alt: alt,
@@ -1871,14 +2172,10 @@ app.put("/prisma/employees/", async (req, res) => {
 
             throw error;
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.delete("/prisma/employees/:id", async (req, res) => {
+app.delete("/api/prisma/employees/:id", async (req, res) => {
     const { id } = req.params;
 
     await prisma.employees.update({
@@ -1903,16 +2200,33 @@ app.delete("/prisma/employees/:id", async (req, res) => {
 
             throw error;
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
 // faq routes
 
-app.post("/prisma/faq", async (req, res) => {
+app.get("/api/prisma/faq", async (req, res) => {
+    await prisma.faq.findMany({
+        where: {
+            active: 1
+        },
+        orderBy: {
+            faq_order: "asc"
+        }
+    })
+        .then((data) => {
+            res.status(200).json(data);
+        })
+        .catch((error) => {
+            res.status(400).json({
+                success: false,
+                error: error
+            });
+        }
+        );
+});
+
+app.post("/api/prisma/faq", async (req, res) => {
     const { title, content } = req.body;
 
     const getOrder = await prisma.faq.findMany({
@@ -1968,14 +2282,10 @@ app.post("/prisma/faq", async (req, res) => {
 
             throw error;
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.put("/prisma/faq", async (req, res) => {
+app.put("/api/prisma/faq", async (req, res) => {
     const { id, title, content } = req.body;
 
     await prisma.faq.update({
@@ -2012,14 +2322,10 @@ app.put("/prisma/faq", async (req, res) => {
 
             throw error;
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.delete("/prisma/faq/:id", async (req, res) => {
+app.delete("/api/prisma/faq/:id", async (req, res) => {
     const { id } = req.params;
 
     await prisma.faq.update({
@@ -2044,14 +2350,10 @@ app.delete("/prisma/faq/:id", async (req, res) => {
 
             throw error;
         }
-        )
-        .finally(async () => {
-            await prisma.$disconnect();
-        }
         );
 });
 
-app.put("/prisma/faq/order", async (req, res) => {
+app.put("/api/prisma/faq/order", async (req, res) => {
     const { orderedIds } = req.body;
 
     let errors = [];
@@ -2087,13 +2389,10 @@ app.put("/prisma/faq/order", async (req, res) => {
         success: true,
         message: "Order updated"
     });
-
-    prisma.$disconnect();
 });
 
-// Initialize server
 app.listen(5000, () => {
-    console.log("Running on port 5000.");
+    console.log("Server started on port 5000");
 });
 
 export default app;

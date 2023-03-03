@@ -52,8 +52,6 @@ const OurNews = ({news}: NewsProps) => {
                                     width={item.img_src?1920:1280}
                                     height={item.img_src?1080:783}
                                     quality={90}
-                                    layout="responsive"
-                                    objectFit="cover"
                                     sizes="(max-width: 600px) 600px,
                                     (max-width: 750px) 342px,
                                     (max-width: 900px) 417px,

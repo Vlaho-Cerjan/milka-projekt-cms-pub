@@ -26,7 +26,6 @@ const Greeting = () => {
                 <Image
                     alt={"stock photo of a doctor with "+(isDark?'blue':'green')+" background"}
                     quality={90}
-                    layout="responsive"
                     width={1920}
                     height={1072}
                     sizes="100vw"

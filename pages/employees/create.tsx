@@ -39,7 +39,7 @@ const CreateEmployeePage = ({ employees }: { employees: employees[] }) => {
     const [aditional_names, setAditionalNames] = React.useState("");
     const [last_name, setLastName] = React.useState("");
     const [title, setTitle] = React.useState("");
-    const [employe_title, setEmployeTitle] = React.useState("");
+    const [employee_title, setEmployeTitle] = React.useState("");
     const [bio, setBio] = React.useState("");
     const [email, setEmail] = React.useState("");
     const [phone, setPhone] = React.useState("");
@@ -63,7 +63,7 @@ const CreateEmployeePage = ({ employees }: { employees: employees[] }) => {
                 bio,
                 email,
                 phone,
-                employe_title,
+                employee_title,
                 img_src: image,
                 slug,
                 alt
@@ -196,7 +196,7 @@ const CreateEmployeePage = ({ employees }: { employees: employees[] }) => {
                             {StyledLabel("Titula Zaposlenika")}
                             <StyledInput
 
-                                inputVal={employe_title}
+                                inputVal={employee_title}
                                 inputPlaceholder={"Unesi Titulu Zaposlenika"}
                                 inputChangeFunction={(value) => {
                                     setEmployeTitle(value);

@@ -269,14 +269,14 @@ const Employees = () => {
                                 {StyledLabel("Titula zaposlenika")}
                                 <StyledInput
                                     disabled={employee.locked}
-                                    inputVal={employee.employe_title}
+                                    inputVal={employee.employee_title}
                                     inputPlaceholder={"Unesi Titulu Zaposlenika"}
                                     inputChangeFunction={(value) => {
                                         setItems(items.map((item) => {
                                             if (item.id === employee.id) {
                                                 return {
                                                     ...item,
-                                                    employe_title: value
+                                                    employee_title: value
                                                 }
                                             }
                                             return item;

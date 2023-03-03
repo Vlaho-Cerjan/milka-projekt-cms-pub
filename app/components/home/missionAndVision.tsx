@@ -38,8 +38,6 @@ const MissionAndVision = () => {
                             width={1601}
                             height={632}
                             quality={90}
-                            layout="responsive"
-                            objectFit="cover"
                             className="resImg"
                             sizes="80vw"
                         />
@@ -115,8 +113,6 @@ const MissionAndVision = () => {
                             width={1601}
                             height={1264}
                             quality={90}
-                            layout="responsive"
-                            objectFit="cover"
                             className="resImg"
                             sizes="600px"
                         />

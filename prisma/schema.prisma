@@ -91,7 +91,7 @@ model employees {
   bio             String? @db.MediumText
   email           String? @db.VarChar(255)
   phone           String? @db.VarChar(255)
-  employe_title   String? @db.VarChar(255)
+  employee_title  String? @db.VarChar(255)
   create_at       String? @db.VarChar(255)
   update_at       String? @db.VarChar(255)
   delete_at       String? @db.VarChar(255)
