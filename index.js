@@ -3,7 +3,7 @@ import cors from 'cors';
 import { Prisma, PrismaClient } from "@prisma/client";
 import fs from 'fs';
 
-var whitelist = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5000', 'https://milka-projekt-api.vercel.app', 'https://milka-projekt-cms-sigma.vercel.app']
+var whitelist = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5000', 'https://milka-projekt-api.vercel.app', 'https://milka-projekt-cms-sigma.vercel.app', 'https://dev.varela.hr', 'https://varela-hr.vercel.app']
 var corsOptionsDelegate = function (req, callback) {
     var methods = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'];
   var corsOptions;
@@ -92,6 +92,31 @@ app.get("/api/prisma/homepage", async (req, res) => {
             companyInfo: companyInfo,
             page_info: page_info
         });
+});
+
+// get layout_data
+
+app.get("/api/prisma/layout_data", async (req, res) => {
+    const socials = await prisma.socials.findMany({
+        where: {
+            active: 1
+        }
+    });
+    const company_info = await prisma.company_info.findFirst();
+    const navigation = await prisma.navigation.findMany({
+        where: {
+            active: 1
+        },
+        orderBy: {
+            nav_order: 'asc'
+        }
+    });
+
+    res.status(200).json({
+        socials: socials,
+        company_info: company_info,
+        navigation: navigation
+    });
 });
 
 // Page Info Routes

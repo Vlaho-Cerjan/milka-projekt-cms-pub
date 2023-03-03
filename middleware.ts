@@ -11,6 +11,6 @@ export const config = {
          * - static (static files)
          * - favicon.ico (favicon file)
          */
-        '/((?!api|auth|reset|prisma|static|favicon.ico|auth|reset).*)',
+        '/((?!api|images|auth|reset|prisma|static|favicon.ico|auth|reset).*)',
     ],
 }
