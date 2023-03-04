@@ -2098,9 +2098,11 @@ app.get("/api/prisma/employees/:employeeTitle", async (req, res) => {
 app.post("/api/prisma/employees", async (req, res) => {
     const { first_name, aditional_names, last_name, title, bio, email, phone, employee_title, img_src, slug, alt } = req.body;
 
+    let tempImgSrc = "";
+
     if (typeof img_src !== "undefined" && img_src) {
         const imageName = await SaveImageToDir(img_src, null, "/public/images/employees/");
-        if (imageName) img_src = "/images/employees/" + imageName;
+        if (imageName) tempImgSrc = "/images/employees/" + imageName;
     }
 
     await prisma.employees.create({
@@ -2113,7 +2115,7 @@ app.post("/api/prisma/employees", async (req, res) => {
             email: email,
             phone: phone,
             employee_title: employee_title,
-            img_src: img_src,
+            img_src: tempImgSrc,
             slug: slug,
             alt: alt,
             create_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
@@ -2149,9 +2151,11 @@ app.post("/api/prisma/employees", async (req, res) => {
 app.put("/api/prisma/employees/", async (req, res) => {
     const { id, first_name, aditional_names, last_name, title, bio, email, phone, employee_title, img_src, slug, alt } = req.body;
 
+    let tempImgSrc = "";
+
     if (typeof img_src !== "undefined" && img_src) {
         const imageName = await SaveImageToDir(img_src, null, "/public/images/employees/");
-        if (imageName) img_src = "/images/employees/" + imageName;
+        if (imageName) tempImgSrc = "/images/employees/" + imageName;
     }
 
     await prisma.employees.update({
@@ -2167,7 +2171,7 @@ app.put("/api/prisma/employees/", async (req, res) => {
             email: email,
             phone: phone,
             employee_title: employee_title,
-            img_src: img_src,
+            img_src: tempImgSrc,
             slug: slug,
             alt: alt,
             update_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
